@@ -1,0 +1,187 @@
+{
+  "schema_version": "1.0",
+  "retrieved_at": "2026-05-02T01:07:35Z",
+  "query": {
+    "barcode_read_from_image": "8410793282934",
+    "human_readable_ean_text": "8 410793 282934"
+  },
+  "identifiers": {
+    "ean13": "8410793282934",
+    "gtin13": "8410793282934",
+    "gtin14": "08410793282934",
+    "barcode_format": "EAN-13",
+    "check_digit": "4",
+    "check_digit_valid": true,
+    "gs1_prefix": "84",
+    "gs1_member_organization": "GS1 Spain / AECOC",
+    "gs1_prefix_note": "The GS1 prefix identifies the member organization that allocated the number. It does not by itself prove country of manufacture; product sources separately identify this beer as from Spain."
+  },
+  "normalized_product": {
+    "name": "Estrella Damm",
+    "display_name": "Estrella Damm Lager Beer 330 ml",
+    "brand": "Estrella Damm",
+    "brand_owner_or_manufacturer": [
+      "S.A. Damm",
+      "C.C. Damm S.L."
+    ],
+    "category": [
+      "Alcoholic beverages",
+      "Beer",
+      "Lager",
+      "Pilsner-style lager"
+    ],
+    "style": "Mediterranean lager",
+    "net_content": {
+      "value": 330,
+      "unit": "ml"
+    },
+    "alcohol_by_volume_percent": 4.6,
+    "country_of_origin_reported": "Spain",
+    "production_or_company_location_reported": "Barcelona, Spain",
+    "container_observed": "Glass bottle",
+    "serving_temperature_celsius_observed": {
+      "min": 4,
+      "max": 8
+    },
+    "case_pack_observed": {
+      "quantity": 24,
+      "unit": "bottles"
+    }
+  },
+  "ingredients": {
+    "official_damm_es": [
+      "water",
+      "barley malt",
+      "rice",
+      "hops"
+    ],
+    "allergens": [
+      "barley",
+      "gluten"
+    ],
+    "market_variant_note": "Some retailer/importer listings include maize/corn in their ingredient list, while Damm's Spanish nutritional page lists water, barley malt, rice and hops for Estrella Damm."
+  },
+  "nutrition_per_100ml": {
+    "source": "Damm official Spanish nutritional information",
+    "energy": {
+      "kj": 208,
+      "kcal": 50
+    },
+    "fat_g": 0,
+    "saturates_g": 0,
+    "carbohydrates_g": 4.2,
+    "sugars_g": "<0.5",
+    "protein_g": 0.4,
+    "salt_g": "<0.01"
+  },
+  "image_label_observations": {
+    "net_content": "330 ml",
+    "alcohol_by_volume_percent": 4.6,
+    "category_text": "Cerveza clara",
+    "country_statement": "Hecho en Espana",
+    "mexico_health_warning_present": true
+  },
+  "source_facts": [
+    {
+      "source_name": "Damm official product page",
+      "url": "https://www.damm.com/en/beers/estrella-damm",
+      "facts_used": [
+        "Product name: Estrella Damm",
+        "Beer described as Mediterranean lager since 1876",
+        "Ingredients described as barley malt, rice and hops",
+        "No additives or preservatives",
+        "Recommended serving temperature: 4-6 C"
+      ]
+    },
+    {
+      "source_name": "Damm official nutritional information",
+      "url": "https://www.damm.com/es/nutricional",
+      "facts_used": [
+        "Ingredients: water, barley malt, rice, hops",
+        "Contains gluten",
+        "Nutrition per 100 ml: 208 kJ / 50 kcal, 4.2 g carbohydrates, <0.5 g sugars, 0.4 g protein, <0.01 g salt"
+      ]
+    },
+    {
+      "source_name": "Draft Masters Panama",
+      "url": "https://draftmasterspty.com/producto/cerveza-estrella-damm/",
+      "facts_used": [
+        "SKU/EAN: 8410793282934",
+        "Style: Lager / Pilsner",
+        "ABV: 4.6%",
+        "Volume: 330 ml",
+        "Origin: Spain",
+        "Brand: S.A. Damm"
+      ]
+    },
+    {
+      "source_name": "Kespro Finland listing",
+      "url": "https://www.kespro.com/tuotteet/estrella-damm-lager-4-6-0-33l-klp-8410793282934",
+      "facts_used": [
+        "GTIN: 8410793282934",
+        "Product: Estrella Damm lager 4.6% 0.33 l",
+        "Beer type: Lager",
+        "Marketed by: CC DAMM S.L., Rosello 515, 08025 Barcelona, Spain",
+        "Country of manufacture: Spain",
+        "Case pack: 24 bottles"
+      ]
+    },
+    {
+      "source_name": "Supermaxi Ecuador listing",
+      "url": "https://www.supermaxi.com/producto/cerveza-mediterranea-estrella-damm-330-ml/",
+      "facts_used": [
+        "Code: 8410793282934",
+        "Product name: Cerveza Espanola Mediterranea En Botella ESTRELLA DAMM 330 Ml",
+        "Brand: Estrella Damm",
+        "Description includes original 1876 recipe, barley malt, rice and hops"
+      ]
+    },
+    {
+      "source_name": "Balmerk Estonia listing",
+      "url": "https://balmerk.ee/toode/estrella-damm-beer-33cl-bottle/",
+      "facts_used": [
+        "EAN: 8410793282934",
+        "Product: Estrella Damm Beer 33cl bottle",
+        "Producer: S.A. Damm",
+        "Country of origin: Spain",
+        "ABV: 4.6% vol",
+        "Product group: beer",
+        "Case quantity: 24",
+        "Serving temperature: 5-8 C"
+      ]
+    },
+    {
+      "source_name": "GS1 Spain GCP information",
+      "url": "https://www.gs1es.org/estandares-gs1-identificar/gcp/",
+      "facts_used": [
+        "For AECOC / GS1 Spain, the GS1 prefix is 84",
+        "GS1 company prefix identifies the company/licensee responsible for generated identifiers"
+      ]
+    },
+    {
+      "source_name": "GS1 Global support: EAN-13 and GS1 prefix notes",
+      "url": "https://support.gs1.org/support/solutions/articles/43000734137-what-is-the-gs1-barcode-commonly-used-for-trade-item-identification-",
+      "facts_used": [
+        "EAN-13 and UPC-A are widely used for trade item identification",
+        "GTIN structure includes GS1 company prefix, item reference and check digit"
+      ]
+    },
+    {
+      "source_name": "GS1 Global support: prefix is not country of origin",
+      "url": "https://support.gs1.org/support/solutions/articles/43000734188-does-the-gs1-prefix-first-3-digits-of-the-ean-13-barcode-number-show-the-country-of-origin-",
+      "facts_used": [
+        "GS1 prefix does not indicate country of origin or manufacture"
+      ]
+    }
+  ],
+  "data_quality": {
+    "overall_confidence": "high",
+    "identity_confidence": "high",
+    "reason": "Multiple independent listings match the same EAN/GTIN to Estrella Damm 330 ml 4.6% beer, and the EAN-13 check digit is valid.",
+    "known_limitations": [
+      "Retailer listings can differ by market and may be stale.",
+      "Ingredient percentages and maize/corn presence vary between sources.",
+      "No live GS1 Verified by GS1 product lookup was captured in this file."
+    ]
+  }
+}

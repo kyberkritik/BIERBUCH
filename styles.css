@@ -1,0 +1,274 @@
+:root {
+  --bg: #000000;
+  --fg: #ffffff;
+  --accent: #ffb800;
+  --muted: #9a9a9a;
+  --line: #ffffff;
+  --card-bg: #0a0a0a;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-weight: 400;
+  -webkit-font-smoothing: antialiased;
+}
+
+a { color: var(--accent); text-decoration: none; border-bottom: 1px solid var(--accent); }
+a:hover { background: var(--accent); color: var(--bg); }
+
+code { font-family: "SF Mono", "Menlo", monospace; color: var(--accent); }
+
+/* ---------- Masthead ---------- */
+.masthead {
+  border-bottom: 4px solid var(--line);
+  padding: 48px 32px 24px;
+}
+.masthead__inner {
+  max-width: 1280px;
+  margin: 0 auto;
+}
+.logo {
+  font-size: clamp(48px, 9vw, 112px);
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  line-height: 0.9;
+  margin: 0;
+  text-transform: uppercase;
+}
+.logo__accent { color: var(--accent); }
+.tagline {
+  font-size: 14px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: 16px 0 0;
+}
+.masthead__bar {
+  height: 12px;
+  background: var(--accent);
+  margin-top: 24px;
+}
+
+/* ---------- Grid ---------- */
+.grid {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 48px 32px 96px;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 48px;
+}
+.loading {
+  font-size: 14px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* ---------- Card ---------- */
+.card {
+  border: 2px solid var(--line);
+  background: var(--card-bg);
+  display: grid;
+  grid-template-columns: minmax(260px, 360px) 1fr;
+  gap: 0;
+}
+@media (max-width: 760px) {
+  .card { grid-template-columns: 1fr; }
+}
+
+.card__media {
+  background: var(--fg);
+  border-right: 2px solid var(--line);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  min-height: 320px;
+}
+@media (max-width: 760px) {
+  .card__media { border-right: none; border-bottom: 2px solid var(--line); }
+}
+.card__media img {
+  max-width: 100%;
+  max-height: 480px;
+  object-fit: contain;
+  display: block;
+}
+
+.card__body {
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.card__head h2 {
+  font-size: clamp(28px, 4vw, 44px);
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  margin: 0;
+  text-transform: uppercase;
+}
+.card__head .brand {
+  font-size: 12px;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin: 0 0 12px;
+}
+.card__head .ean {
+  font-family: "SF Mono", "Menlo", monospace;
+  font-size: 14px;
+  color: var(--muted);
+  margin: 12px 0 0;
+}
+
+/* ---------- Stat row ---------- */
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 0;
+  border-top: 2px solid var(--line);
+  border-bottom: 2px solid var(--line);
+}
+.stat {
+  padding: 16px;
+  border-right: 1px solid var(--line);
+}
+.stat:last-child { border-right: none; }
+.stat__label {
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--muted);
+  display: block;
+  margin-bottom: 6px;
+}
+.stat__value {
+  font-size: 22px;
+  font-weight: 900;
+  letter-spacing: -0.01em;
+}
+.stat__value--accent { color: var(--accent); }
+
+/* ---------- Section ---------- */
+.section h3 {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  margin: 0 0 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--muted);
+  color: var(--accent);
+}
+.section p, .section li {
+  font-size: 15px;
+  line-height: 1.55;
+  margin: 0 0 6px;
+}
+.section ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.kv {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  gap: 6px 16px;
+  font-size: 14px;
+}
+@media (max-width: 520px) {
+  .kv { grid-template-columns: 1fr; gap: 0 0; }
+  .kv dt { color: var(--muted); margin-top: 8px; }
+}
+.kv dt {
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-size: 11px;
+  align-self: center;
+}
+.kv dd { margin: 0; }
+
+/* ---------- Tags ---------- */
+.tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.tag {
+  border: 1px solid var(--fg);
+  padding: 4px 10px;
+  font-size: 11px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+.tag--accent { border-color: var(--accent); color: var(--accent); }
+
+/* ---------- Sources ---------- */
+.sources details {
+  border-top: 1px solid var(--muted);
+  padding: 12px 0;
+}
+.sources details:last-child { border-bottom: 1px solid var(--muted); }
+.sources summary {
+  cursor: pointer;
+  font-size: 13px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  list-style: none;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+.sources summary::-webkit-details-marker { display: none; }
+.sources summary::after { content: "+"; color: var(--accent); font-weight: 700; }
+.sources details[open] summary::after { content: "−"; }
+.sources ul { margin: 12px 0 0; padding-left: 20px; }
+.sources li { font-size: 13px; line-height: 1.5; color: var(--muted); }
+.sources .src-url { display: block; margin-top: 4px; font-size: 12px; word-break: break-all; }
+
+/* ---------- Quality badge ---------- */
+.quality {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--accent);
+  padding: 6px 12px;
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.quality::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  background: var(--accent);
+  display: inline-block;
+}
+
+/* ---------- Foot ---------- */
+.foot {
+  border-top: 4px solid var(--line);
+  padding: 24px 32px;
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--muted);
+  text-align: center;
+}
+
+.error {
+  border: 2px solid var(--accent);
+  padding: 16px;
+  color: var(--accent);
+  font-size: 13px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
