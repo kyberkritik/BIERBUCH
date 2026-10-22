@@ -185,7 +185,7 @@
     <div class="wrap">
       <a class="back" href="index.html">← BIERBUCH</a>
       <h1 class="logo">Cerveza en<span>Guadalajara</span></h1>
-      <p class="tagline">Cervecerías · taprooms · bares · fábricas<br />Guadalajara · Zapopan · Ajijic · Tlaquepaque</p>
+      <p class="tagline">Cervecerías · taprooms · bares · fábricas<br />Guadalajara · Zapopan · Tlaquepaque · Ajijic</p>
     </div>
     <div class="bar" aria-hidden="true"></div>
   </header>
@@ -204,7 +204,7 @@
   <main class="wrap">
     <div class="notice">
       <b>Antes de ir</b>
-      Datos reunidos en octubre de 2026 a partir de guías, prensa y directorios públicos (enlazados en cada ficha). Los horarios cambian seguido y varias fuentes se contradicen: cuando hay discrepancia se indica. Confirma por teléfono o Instagram antes de salir, sobre todo para tours.
+      Datos reunidos en octubre de 2026 (ampliado con más cervecerías) a partir de guías, prensa y directorios públicos (enlazados en cada ficha). Los horarios cambian seguido y varias fuentes se contradicen: cuando hay discrepancia se indica. Confirma por teléfono o Instagram antes de salir, sobre todo para tours.
     </div>
 
     <section id="mapa">
@@ -256,7 +256,7 @@
       <h2 class="sec">Método</h2>
       <div class="method">
         <p><b>Rating BIERBUCH (1–5):</b> calificación editorial que pondera oferta cervecera (variedad, cerveza propia o de grifo), reputación en guías y prensa, experiencia (comida, espacio, tours) y certeza de los datos. No es un promedio de Google ni de Tripadvisor. Cuando una fuente publica una calificación de usuarios, aparece aparte como “ref.”.</p>
-        <p><b>Clusters:</b> se calculan en el navegador con un DBSCAN sencillo sobre distancia haversine (<code>eps = 750 m</code>, <code>mínimo 2 lugares</code>). Los lugares sin vecinos cercanos quedan como “destino propio”. El nombre de cada cluster es la zona más frecuente entre sus miembros.</p>
+        <p><b>Clusters:</b> se calculan en el navegador con un DBSCAN sencillo sobre distancia haversine (<code>eps = 750 m</code>, <code>mínimo 2 lugares</code>). Los lugares sin vecinos cercanos se agrupan con los de su misma zona; si quedan solos, son “destino propio”. El nombre de cada cluster es la zona más frecuente entre sus miembros.</p>
         <p><b>Horarios:</b> tomados de la fuente más reciente encontrada. Si dos fuentes difieren, se muestra la más reciente y se marca “fuentes discrepan”.</p>
       </div>
     </section>
@@ -268,20 +268,20 @@
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
   <script>
-    // Horario semanal: índice 0 = domingo … 6 = sábado. null = cerrado.
+    // Horario semanal: índice 0 = domingo … 6 = sábado. null = cerrado, "?" = sin dato ese día.
     const PLACES = [
       {
         id: "loba", name: "Cerveza Loba · UMHO", kind: "Fábrica + gastropub", types: ["artesanal", "fabrica"],
-        zone: "Santa Tere / Americana", colonia: "Santa Teresita (junto a col. Americana)", municipio: "Guadalajara",
+        zone: "Santa Tere / Americana", colonia: "Villaseñor (junto a Santa Tere)", municipio: "Guadalajara",
         address: "Gregorio Dávila 76, Guadalajara", lat: 20.6788, lng: -103.3665,
         rating: 4.6,
         blurb: "Cervecería tapatía (2015) con fábrica, tasting room y el gastropub UMHO en el mismo espacio, cerca del Mercado Santa Tere. Siete estilos de la casa: witbier, IPA, porter y más.",
-        hours: [["13:00", "19:00"], null, ["14:00", "01:00"], ["14:00", "01:00"], ["14:00", "01:00"], ["14:00", "01:00"], ["14:00", "01:00"]],
+        hours: [["13:00", "19:00"], "?", ["14:00", "01:00"], ["14:00", "01:00"], ["14:00", "01:00"], ["14:00", "01:00"], ["14:00", "01:00"]],
         hoursNote: "Fuentes discrepan (Yelp marca horario diurno L–V). Lunes sin dato.",
         tour: { has: "si", text: "Guías de turismo reportan recorridos guiados por el proceso (fermentación → cata en el tasting room). También hay experiencias de arquitectura + cervecería que terminan aquí. Reservar." },
         phone: "+52 33 2035 6401",
         tags: ["Cerveza propia", "Comida", "Tour"],
-        sources: ["https://www.mexicodesconocido.com.mx/tour-de-cerveza-en-guadalajara.html", "https://forbes.com.mx/?p=703361", "https://www.yelp.com/biz/loba-guadalajara", "https://restaurantguru.com/Umho-Guadalajara"]
+        sources: ["https://www.mexicodesconocido.com.mx/tour-de-cerveza-en-guadalajara.html", "https://forbes.com.mx/?p=703361", "https://www.yelp.com/biz/loba-guadalajara", "https://restaurantguru.com/Umho-Guadalajara", "https://www.thebeertimes.com/guadalajara-artesanal-6-bares-de-cervezas/"]
       },
       {
         id: "patan", name: "Patán Ale House", kind: "Bar de grifos", types: ["bar", "artesanal"],
@@ -323,24 +323,25 @@
         id: "deposito", name: "El Depósito", kind: "Bottle shop + jardín", types: ["bar", "internacional"],
         zone: "Chapultepec", colonia: "Americana", municipio: "Guadalajara",
         address: "Av. Chapultepec Sur 129, Col. Americana, Guadalajara", lat: 20.6727, lng: -103.3693,
-        rating: 4.1,
-        blurb: "Tienda y bar con jardín cervecero sencillo y una gama enorme de botellas importadas (sobre todo belgas) y artesanales. Las importadas son caras; lo local, barato.",
+        rating: 3.8,
+        blurb: "Tienda y bar con jardín cervecero sencillo y una gama enorme de botellas importadas (sobre todo belgas) y artesanales. Untappd ya registra Señor Stone en esta misma dirección, así que El Depósito pudo haber cerrado o cambiado de nombre.",
         hours: null,
         tour: { has: "no" },
+        status: "cerrado?",
         tags: ["Importadas", "Belgas", "Jardín"],
-        sources: ["https://www.theculturetrip.com/north-america/mexico/articles/the-best-bars-in-chapultepec-guadalajara", "https://www.airbnb.com/things-to-do/places/2523992"]
+        sources: ["https://www.theculturetrip.com/north-america/mexico/articles/the-best-bars-in-chapultepec-guadalajara", "https://www.airbnb.com/things-to-do/places/2523992", "https://untappd.com/v/senor-stone-chapultepec/13463419"]
       },
       {
-        id: "almacen", name: "Almacén de Botellas", kind: "Bar + tienda", types: ["bar", "artesanal", "internacional"],
+        id: "almacen", name: "Almacén de Botellas", kind: "Bar + tienda", types: ["bar", "artesanal", "micro", "internacional"],
         zone: "Americana", colonia: "Americana", municipio: "Guadalajara",
         address: "Av. Miguel Hidalgo y Costilla 1151, Guadalajara", lat: 20.6768, lng: -103.3612,
         rating: 4.0,
-        blurb: "Carta de ~44 etiquetas artesanales locales, nacionales e importadas, de claras a oscuras; se puede beber ahí o llevar. Otras sucursales en Patria y Providencia.",
+        blurb: "Casa de Cervecería Porfirio: unas 44 líneas con la cerveza propia más artesanales locales, nacionales e importadas; se puede beber ahí o llevar. Otras sucursales en Patria y Providencia.",
         hours: null,
         tour: { has: "no" },
         phone: "+52 33 1479 4650", ig: "almacendebotellas",
-        tags: ["~44 etiquetas", "Para llevar", "3 sucursales"],
-        sources: ["https://foodandpleasure.com/bar-de-cerveza-en-guadalajara/"]
+        tags: ["Cerveza Porfirio", "~44 líneas", "Para llevar"],
+        sources: ["https://foodandpleasure.com/bar-de-cerveza-en-guadalajara/", "https://coolhuntermx.com/gastronomia-cerveceria-porfirio-almacen-de-botellas-cerveza-artesanal-guadalajara/"]
       },
       {
         id: "irish", name: "The Real Irish Pub", kind: "Pub irlandés", types: ["internacional", "bar"],
@@ -461,10 +462,220 @@
         tour: { has: "parcial", text: "Degustaciones y maridajes guiados; no hay recorrido de planta publicado." },
         tags: ["Excursión", "Maridajes", "Pueblo Mágico"],
         sources: ["https://www.tvazteca.com/aztecauno/viajes/el-pueblo-magico-jalisco-que-tiene-la-mejor-cerveza-artesanal-y-que-muy-pocos-lo", "https://www.brewbound.com/news/keg-trading-co-announces-craft-imports-from-corazon-de-malta"]
+      },
+      {
+        id: "gibbons", name: "Cervecería Gibbons", kind: "Brewpub + pizza", types: ["artesanal", "micro"],
+        zone: "Americana", colonia: "Americana", municipio: "Guadalajara",
+        address: "C. Marsella 180, Col. Americana, Guadalajara", lat: 20.6742, lng: -103.3652,
+        rating: 4.3, ref: { v: 4.1, src: "Untappd (93)" },
+        blurb: "Brewpub de cervezas estilo California fundado por Maxwell Anderson, heredero de la marca familiar Gibbons de Pensilvania. Ales americanas como la Golden Langur (American Strong Ale, 8.1 %) y pizza napolitana.",
+        hours: [null, null, null, ["16:00", "23:00"], ["16:00", "23:00"], ["16:00", "23:00"], ["16:00", "23:00"]],
+        hoursNote: "Sitio oficial. Algunos directorios lo ubican en Escorza 848 (Mexicaltzingo): confirmar dirección.",
+        tour: { has: "no" },
+        tags: ["Estilo California", "Pizza", "Cerveza propia"],
+        sources: ["https://gibbons.mx/", "https://untappd.com/w/gibbons/557990", "https://theguadalajarareporter.net/index.php/featured/64542-maxwell-gibbons-anderson-a-family-beer-legacy-and-a-new-start-in-mexico", "https://www.beermenus.com/breweries/36361-gibbons-brewery"]
+      },
+      {
+        id: "insurgente", name: "Insurgente Tap Room GDL", kind: "Taproom de cervecería", types: ["artesanal", "taproom"],
+        zone: "Americana", colonia: "Americana", municipio: "Guadalajara",
+        address: "Calle Argentina 16, Col. Americana, Guadalajara", lat: 20.6758, lng: -103.3612,
+        rating: 4.4,
+        blurb: "El primer taproom de la tijuanense Cervecería Insurgente fuera de Baja California: sus cervezas de línea y de temporada, de barril.",
+        hours: [["13:00", "21:00"], null, ["16:30", "00:00"], ["16:30", "00:00"], ["16:30", "00:00"], ["16:30", "00:00"], ["16:30", "00:00"]],
+        hoursNote: "Sitio oficial e Instagram coinciden.",
+        tour: { has: "no" },
+        phone: "+52 33 3545 3197", ig: "insurgentebrew_gdl",
+        tags: ["Baja California", "Barril"],
+        sources: ["https://cervezainsurgente.com/tap-rooms", "https://cervezainsurgente.com/cerveza-artesanal-en-guadalajara-1", "https://wanderlog.com/place/details/8070644/insurgente-tap-room-guadalajara"]
+      },
+      {
+        id: "amargo", name: "Amargo Cervecería", kind: "Bar de grifos", types: ["bar", "artesanal"],
+        zone: "Americana", colonia: "Americana (junto al Expiatorio)", municipio: "Guadalajara",
+        address: "Prisciliano Sánchez 807, Col. Americana, Guadalajara", lat: 20.6713, lng: -103.3567,
+        rating: 4.4,
+        blurb: "Bar de barrio a media cuadra del Templo Expiatorio: 14–16 líneas de barril de lo mejor nacional y más de 200 etiquetas en botella.",
+        hours: ["?", "?", ["17:00", "01:00"], ["17:00", "01:00"], ["17:00", "01:00"], ["17:00", "01:00"], ["17:00", "01:00"]],
+        hoursNote: "Domingo y lunes: fuentes discrepan.",
+        tour: { has: "no" },
+        ig: "amargocerveceria",
+        tags: ["14–16 grifos", "200+ botellas"],
+        sources: ["https://www.yelp.com/biz/amargo-guadalajara", "https://www.tripadvisor.in/Restaurant_Review-g150798-d17288267-Reviews-Amargo_Cerveceria-Guadalajara_Guadalajara_Metropolitan_Area.html", "https://www.thebeertimes.com/guadalajara-artesanal-6-bares-de-cervezas/"]
+      },
+      {
+        id: "santasabina", name: "Santa Sabina Americana", kind: "Microcervecería + bar", types: ["artesanal", "micro", "taproom"],
+        zone: "Americana", colonia: "Americana", municipio: "Guadalajara",
+        address: "Vidrio 1888, Col. Americana, Guadalajara", lat: 20.6722, lng: -103.3728,
+        rating: 4.4,
+        blurb: "Cervecería tapatía con más de una década haciendo cerveza propia, entre las mejor calificadas de México en Untappd. En la misma dirección está el restaurante Silvestre, que la sirve directo de la microcervecería.",
+        hours: [["16:00", "23:00"], ["18:00", "00:00"], ["18:00", "00:00"], ["17:00", "01:00"], ["17:00", "01:00"], ["15:00", "01:00"], ["15:00", "01:00"]],
+        hoursNote: "Según su Instagram. Tripadvisor marca domingo y lunes cerrados.",
+        tour: { has: "parcial", text: "Su tap room de producción recibe visitas de lunes a viernes de 9:00 a 17:00, según la Ruta Cerveza Artesanal. Confirmar antes." },
+        phone: "+52 33 1019 3677", ig: "santasabinaamericana",
+        tags: ["Cerveza propia", "Comida"],
+        sources: ["https://ezconnect.me/santasabina/americana/", "https://rutacervezartesanal.com/bares/santa-sabina-tap-room/", "https://www.yelp.com/biz/silvestre-guadalajara"]
+      },
+      {
+        id: "senorstone", name: "Señor Stone Chapultepec", kind: "Bar deportivo", types: ["bar", "artesanal"],
+        zone: "Chapultepec", colonia: "Americana", municipio: "Guadalajara",
+        address: "Av. Chapultepec Sur 129, Col. Americana, Guadalajara", lat: 20.6728, lng: -103.3691,
+        rating: 3.6,
+        blurb: "Bar de futbol con artesanales mexicanas de barril (Fortuna, Rámuri). Hay otra sucursal en Av. Vallarta 1068.",
+        hours: null,
+        tour: { has: "no" },
+        phone: "+52 33 1775 1164",
+        tags: ["Deportes", "Artesanal mexicana"],
+        sources: ["https://untappd.com/v/senor-stone-chapultepec/13463419", "https://thecrowd.fan/bars/seor-stone-chapultepec"]
+      },
+      {
+        id: "malta33", name: "Malta 33", kind: "Bar de cerveza jalisciense", types: ["bar", "artesanal"],
+        zone: "Santa Tere", colonia: "Santa Teresita", municipio: "Guadalajara",
+        address: "Calle Hospital 1557, Santa Teresita, Guadalajara", lat: 20.6832, lng: -103.3683,
+        rating: 4.3,
+        blurb: "Solo cerveza artesanal hecha en Jalisco, de barril y botella, y hasta malteada de cerveza. “Botanazo” de 17:00 a 22:00. Se llena los viernes.",
+        hours: [null, "?", ["17:30", "23:00"], ["17:30", "23:00"], ["17:30", "01:00"], ["17:30", "01:00"], ["17:30", "01:00"]],
+        hoursNote: "Lunes: fuentes discrepan.",
+        tour: { has: "no" },
+        tags: ["100 % Jalisco", "Malteada de cerveza"],
+        sources: ["https://periodismodesdelabarra.com/2022/10/11/malta-33/", "https://wanderlog.com/place/details/1496243/malta-33", "https://www.mexicodesconocido.com.mx/el-lugar-en-guadalajara-donde-puedes-pedir-una-malteada-de-cerveza.html"]
+      },
+      {
+        id: "cielito", name: "Cervecería Cielito Lindo", kind: "Fábrica", types: ["artesanal", "fabrica"],
+        zone: "La Guadalupana", colonia: "La Guadalupana", municipio: "Guadalajara",
+        address: "Calz. del Federalismo Nte. 1918, La Guadalupana, Guadalajara", lat: 20.7055, lng: -103.3497,
+        rating: 4.2,
+        blurb: "Abrió en 2020 como una de las artesanales de mayor capacidad del país; IPAs estilo New England con ingredientes de la región. Desde 2023 también produce Minerva.",
+        hours: [null, ["09:00", "13:00"], ["09:00", "13:00"], ["09:00", "13:00"], ["09:00", "13:00"], ["09:00", "13:00"], null],
+        hoursNote: "Horario de oficina según un directorio (ago 2025).",
+        tour: { has: "si", text: "Parte de la Ruta de la Cerveza Artesanal Guadalajara–Zapopan: recorrido por el proceso con degustación y opción de maridaje. Reservar." },
+        tags: ["Ruta oficial", "NEIPA", "Dueña de Minerva"],
+        sources: ["https://www.zapopan.gob.mx/v3/noticias/zapopan-y-guadalajara-presentan-la-ruta-de-la-cerveza-artesanal", "https://visitjalisco.mx/blog/cervezas-artesanales-de-jalisco-donde-brindar-en-el-dia-internacional-de-la-cerveza", "https://www.hopculture.com/?p=9279"]
+      },
+      {
+        id: "zorramonraz", name: "Cerveza Zorra Bistro & Pub Monraz", kind: "Pub de la cervecería", types: ["artesanal", "taproom"],
+        zone: "Monraz", colonia: "Monraz", municipio: "Guadalajara",
+        address: "Diag. Golfo de Cortés 4140-A, Monraz, Guadalajara", lat: 20.6905, lng: -103.3985,
+        rating: 4.2,
+        blurb: "Pub de Cerveza Zorra, una de las marcas tapatías favoritas: cerveza en copa, vinos, coctelería y menú de bistró.",
+        hours: [["14:30", "19:30"], ["15:30", "00:00"], ["15:30", "00:00"], ["15:30", "00:00"], ["15:30", "00:00"], ["15:30", "01:00"], ["15:30", "01:00"]],
+        hoursNote: "Según OpenTable.",
+        tour: { has: "no" },
+        phone: "+52 33 3362 8564",
+        tags: ["Cerveza propia", "Bistró"],
+        sources: ["https://www.opentable.com/r/cerveza-zorra-bistro-pub-monraz-guadalajara", "https://zorrabistropub.com/"]
+      },
+      {
+        id: "zorrazapopan", name: "Cerveza Zorra Bistro & Pub Zapopan", kind: "Pub de la cervecería", types: ["artesanal", "taproom"],
+        zone: "Zapopan Centro", colonia: "Zapopan Centro Histórico", municipio: "Zapopan",
+        address: "5 de Mayo 272, Zapopan Centro", lat: 20.7218, lng: -103.3902,
+        rating: 4.1,
+        blurb: "Segunda casa de Cerveza Zorra, a unas cuadras de la Basílica de Zapopan.",
+        hours: [["14:30", "19:30"], null, ["17:00", "00:00"], ["17:00", "00:00"], ["17:00", "00:00"], ["14:00", "01:00"], ["14:00", "01:00"]],
+        hoursNote: "Sitio oficial.",
+        tour: { has: "no" },
+        tags: ["Cerveza propia", "Centro de Zapopan"],
+        sources: ["https://zorrabistropub.com/zapopan"]
+      },
+      {
+        id: "bunker", name: "Búnker Brew Club", kind: "Bar subterráneo", types: ["bar", "artesanal"],
+        zone: "Seattle / Patria", colonia: "Seattle", municipio: "Zapopan",
+        address: "San Jorge 225, Col. Seattle, Zapopan", lat: 20.7005, lng: -103.4065,
+        rating: 4.4,
+        blurb: "Bar dentro de un búnker de 1945 a unos 10 m bajo tierra: catas a ciegas, amplia selección artesanal, pizzas y botanas. Se entra por la escalera bajo el letrero rosa “Ceci”. Requiere reservación.",
+        hours: [["16:30", "20:00"], null, ["16:30", "01:00"], ["16:30", "01:00"], ["16:30", "01:00"], ["16:30", "01:00"], ["16:30", "01:00"]],
+        hoursNote: "Fuentes discrepan en sábado y domingo.",
+        tour: { has: "parcial", text: "Catas a ciegas guiadas; no es una fábrica." },
+        phone: "+52 33 3357 9683",
+        tags: ["Reservar", "Cata a ciegas", "Búnker"],
+        sources: ["https://www.trendencias.com/mexico/cita-cata-cerveza-a-ciegas-esta-cerveceria-subterranea-guadalajara-mexico-que-tiene-mejor-plan-para-fin-semana", "https://www.opentable.com/r/bunker-brew-club-zapopan", "https://zonaguadalajara.com/bar-bajo-tierra-guadalajara/"]
+      },
+      {
+        id: "tapstation", name: "Tap Station Craft Beer", kind: "Bar de grifos", types: ["bar", "artesanal"],
+        zone: "Arboledas", colonia: "Arboledas", municipio: "Zapopan",
+        address: "Av. Nicolás Copérnico 4176, Arboledas, Zapopan", lat: 20.6435, lng: -103.4138,
+        rating: 4.0,
+        blurb: "Buena selección artesanal de barril, con las cervezas de línea y de temporada de Insurgente.",
+        hours: null,
+        tour: { has: "no" },
+        phone: "+52 33 1473 5722",
+        tags: ["Grifos", "Insurgente"],
+        sources: ["https://cervezainsurgente.com/puntos-de-venta-guadalajara", "https://untappd.com/v/tap-station-craft-beer/6238673/activity"]
+      },
+      {
+        id: "bazarmalta", name: "Bazar Malta", kind: "Boutique de cerveza", types: ["artesanal", "taproom"],
+        zone: "Chapalita", colonia: "Chapalita Oriente", municipio: "Zapopan",
+        address: "Av. Guadalupe 1558-i (Santa Rita Plaza), Chapalita Oriente, Zapopan", lat: 20.6648, lng: -103.3962,
+        rating: 4.1,
+        blurb: "Boutique de cerveza artesanal mexicana con más de 150 etiquetas de más de 40 casas cerveceras, para beber ahí o llevar.",
+        hours: null,
+        tour: { has: "no" },
+        status: "verificar",
+        tags: ["150+ etiquetas", "Mexicana"],
+        sources: ["https://www.yelp.com/biz/bazar-malta-zapopan", "https://www.thebeertimes.com/guadalajara-artesanal-6-bares-de-cervezas/"]
+      },
+      {
+        id: "californiawings", name: "California Wings and Beer", kind: "Alitas + cerveza propia", types: ["bar", "micro"],
+        zone: "Av. Manuel Acuña", colonia: "Av. Manuel Acuña (poniente)", municipio: "Guadalajara",
+        address: "Av. Manuel Acuña 3184, Guadalajara", lat: 20.6935, lng: -103.4028,
+        rating: 3.9,
+        blurb: "Alitas con cerveza de la casa (California Brewing Co., microcervecería tapatía desde 2015).",
+        hours: [["13:00", "22:00"], ["13:00", "01:00"], ["13:00", "01:00"], ["13:00", "01:00"], ["13:00", "01:00"], ["13:00", "01:00"], ["13:00", "01:00"]],
+        hoursNote: "Yelp; domingo con horario reducido (cierre aproximado).",
+        tour: { has: "no" },
+        phone: "+52 33 3813 2955",
+        tags: ["Alitas", "Cerveza propia"],
+        sources: ["https://www.yelp.com.mx/biz/california-wings-and-beer-guadalajara", "https://untappd.com/CaliforniaBrewingCo"]
+      },
+      {
+        id: "cielitotlaq", name: "Cielito Lindo Cervecería Restaurant", kind: "Restaurante de la cervecería", types: ["artesanal", "taproom"],
+        zone: "Tlaquepaque Centro", colonia: "Centro de Tlaquepaque", municipio: "San Pedro Tlaquepaque",
+        address: "Independencia 28, Centro, San Pedro Tlaquepaque", lat: 20.6402, lng: -103.3118,
+        rating: 4.0,
+        blurb: "Restaurante de Cervecería Cielito Lindo sobre el andador Independencia: su cerveza artesanal, además de vino y coctelería.",
+        hours: null,
+        tour: { has: "no" },
+        tags: ["Andador", "Comida"],
+        sources: ["https://www.tripadvisor.com/Restaurant_Review-g659617-d23989435-Reviews-Cielito_Lindo_Cerveceria_Restaurant-Tlaquepaque_Guadalajara_Metropolitan_Area.html"]
+      },
+      {
+        id: "cervtlaq", name: "Cervecería Tlaquepaque", kind: "Bar de cerveza", types: ["bar", "artesanal"],
+        zone: "Tlaquepaque Centro", colonia: "Centro de Tlaquepaque", municipio: "San Pedro Tlaquepaque",
+        address: "Prisciliano Sánchez 36, Centro, San Pedro Tlaquepaque", lat: 20.6392, lng: -103.3108,
+        rating: 3.9,
+        blurb: "Bar de cerveza en el centro de Tlaquepaque; reseñas recientes destacan pizzas y alitas a la leña.",
+        hours: null,
+        tour: { has: "no" },
+        phone: "+52 33 3657 7175",
+        tags: ["Pizza a la leña"],
+        sources: ["https://www.yelp.com/biz/cerveceria-tlaquepaque-san-pedro-tlaquepaque"]
+      },
+      {
+        id: "chaputlaq", name: "La Cervecería Chapultepec Tlaquepaque", kind: "Cadena comercial", types: ["comercial", "bar"],
+        zone: "Tlaquepaque Centro", colonia: "Centro de Tlaquepaque", municipio: "San Pedro Tlaquepaque",
+        address: "Juárez 144, Centro, San Pedro Tlaquepaque", lat: 20.6410, lng: -103.3102,
+        rating: 3.1,
+        blurb: "Sucursal de la cadena de precio único: cerveza comercial en tarro y botanas, a pasos del Jardín Hidalgo.",
+        hours: null,
+        tour: { has: "no" },
+        tags: ["Precio único", "Comercial"],
+        sources: ["https://www.yelp.com/biz/cervecer%C3%ADa-chapultepec-san-pedro-tlaquepaque"]
+      },
+      {
+        id: "ochomaltas", name: "Cervecería 8 Maltas", kind: "Microcervecería + beer hotel", types: ["artesanal", "micro", "fabrica"],
+        zone: "Ajijic (Lago de Chapala)", colonia: "El Bajío, Ajijic", municipio: "Chapala",
+        address: "Bajío 3, Col. El Bajío, Ajijic, Jalisco", lat: 20.3012, lng: -103.2705,
+        rating: 4.2,
+        blurb: "Cervecería del primer “beer hotel” de Ajijic (Casa 8 Maltas). Combínala con Corazón de Malta en la misma visita.",
+        hours: [["12:00", "21:00"], null, null, null, null, ["12:00", "21:00"], ["12:00", "21:00"]],
+        hoursNote: "Tripadvisor y Restaurant Guru. Un directorio marca el jueves abierto.",
+        tour: { has: "no" },
+        phone: "+52 33 2173 2331",
+        tags: ["Beer hotel", "Fin de semana"],
+        sources: ["https://www.tripadvisor.com/Restaurant_Review-g499405-d23628465-Reviews-Cerveceria_8_Maltas-Ajijic.html", "https://periodismodesdelabarra.com/2023/02/14/inauguran-beer-hotel/"]
       }
     ];
 
     const TOURS_EXTRA = [
+      { name: "Ruta de la Cerveza Artesanal GDL–Zapopan", verdict: "evento", text: "Ruta oficial de ambos municipios con Minerva, Fortuna, Loba y Cielito Lindo: recorridos por las fábricas, degustaciones y maridajes. Se arma visitando cada una con cita." },
       { name: "Grupo Modelo · planta Guadalajara", verdict: "no", text: "Cervecería Modelo de Guadalajara opera desde 1964. Grupo Modelo hace visitas en otras plantas (p. ej. Zacatecas), pero no encontramos un tour público en la de Guadalajara." },
       { name: "Heineken México", verdict: "no", text: "Sin tour público documentado en el área metropolitana de Guadalajara." },
       { name: "Festival de la Cerveza de Tlaquepaque", verdict: "evento", text: "Festival anual con 20–30 cervecerías artesanales y 200+ etiquetas; la 9ª edición fue el 28 feb–1 mar 2026. Buena forma de probar micros sin taproom propio." },
@@ -475,10 +686,15 @@
       { name: "LaCer Laboratorio Cervecero", note: "Dispensario de barril con Loba, Pecado Capital, Fortuna, 7 Mares, KVRA, Hércules y Cholos Brewing." },
       { name: "Gulden Draak (gastropub)", note: "Cerveza belga, salchichas alemanas, fish & chips y papas estilo belga." },
       { name: "Temple Bar", note: "Pub irlandés con más de 120 cervezas, incluida Guinness." },
-      { name: "Zorra Bistro & Pub (Zapopan)", note: "Cervezas locales, vinos y coctelería con menú de bistró." },
-      { name: "Cervecería Cielito Lindo", note: "Fundada por Héctor Vielma; IPAs estilo New England con ingredientes de la región. Hoy también dueña de Minerva." },
+      { name: "Cola Blanca", note: "Andador 3, Col. Francisco Sarabia, Zapopan. Sin horario confirmado." },
+      { name: "Casa Híkuri", note: "Emeterio Robles Gil 143, Col. Moderna. Bar de artesanal; un directorio lo marca cerrado." },
+      { name: "Principia GDL", note: "Microcervecería regia en Calderón de la Barca 119; Untappd la marca cerrada." },
+      { name: "Cervecería Duque", note: "Fábrica en Delgadillo Araujo 558, Col. Medrano (L–V 9–18). Hace la cerveza de la casa de bares y restaurantes; no es taproom." },
+      { name: "Cervecería Rey Árbol", note: "Nanocervecería de Zapopan muy bien calificada en Untappd. Sin taproom propio: se encuentra en grifos de terceros." },
+      { name: "Magnolia · GDL Brewing Co. · Endémica", note: "Nano y microcervecerías tapatías listadas en Untappd, sin local propio confirmado." },
       { name: "7 Mares · Pecado Capital · KVRA", note: "Micros tapatías que se encuentran sobre todo en grifos de terceros." },
-      { name: "Cervecería Eclipse · Six Legazpi · San Lúpulo", note: "Aparecen en listados de Tripadvisor/Yelp sin dirección confirmada." }
+      { name: "Microcervecería Ánima de Sayula", note: "Listada en Zapopan por finding.beer; sin dirección de taproom." },
+      { name: "Cervecería Eclipse · Six Legazpi · San Lúpulo · 3r Brewing", note: "Aparecen en listados de Tripadvisor/Yelp sin dirección confirmada." }
     ];
 
     const TYPE_LABELS = {
@@ -527,7 +743,8 @@
       const labels = dbscan(PLACES, 0.75, 2);
       const groups = new Map();
       PLACES.forEach((p, i) => {
-        const key = labels[i] === -1 ? `solo-${p.id}` : `c${labels[i]}`;
+        // Lugares sin vecinos cercanos se agrupan por zona (p. ej. dos cervecerías en Ajijic).
+        const key = labels[i] === -1 ? `zona-${p.zone}` : `c${labels[i]}`;
         if (!groups.has(key)) groups.set(key, []);
         groups.get(key).push(p);
       });
@@ -540,7 +757,7 @@
         const radius = Math.max(...members.map(m => km({ lat, lng }, m))) * 1000 + 250;
         const avg = members.reduce((s, m) => s + m.rating, 0) / members.length;
         const span = members.length > 1 ? Math.max(...members.flatMap(a => members.map(b => km(a, b)))) : 0;
-        return { key, members, solo: key.startsWith("solo"), name: members.length > 1 ? zones.slice(0, 2).join(" + ") : members[0].zone, lat, lng, radius, avg, span };
+        return { key, members, solo: members.length === 1, name: members.length > 1 ? zones.slice(0, 2).join(" + ") : members[0].zone, lat, lng, radius, avg, span };
       });
       clusters.sort((a, b) => b.members.length - a.members.length || b.avg - a.avg);
       clusters.forEach((c, i) => {
@@ -567,7 +784,7 @@
       const { day, min } = gdlNow();
       const inSlot = (d, m) => {
         const slot = p.hours[d];
-        if (!slot) return false;
+        if (!Array.isArray(slot)) return false;
         const o = toMin(slot[0]); let c = toMin(slot[1]);
         if (c <= o) c += 1440;
         return m >= o && m < c;
@@ -575,6 +792,7 @@
       const prev = (day + 6) % 7;
       if (inSlot(day, min) || inSlot(prev, min + 1440)) return { state: "y", label: "Abierto ahora" };
       const today = p.hours[day];
+      if (today === "?") return { state: "u", label: "Hoy sin dato" };
       if (today && min < toMin(today[0])) return { state: "n", label: `Cerrado · abre ${today[0]}` };
       return { state: "n", label: "Cerrado ahora" };
     }
@@ -585,7 +803,8 @@
       const order = [1, 2, 3, 4, 5, 6, 0];
       return `<table class="hours">${order.map(d => {
         const s = p.hours[d];
-        return `<tr class="${d === day ? "today" : ""}"><td>${DAYS[d]}</td><td>${s ? `${s[0]}–${s[1]}` : "Cerrado"}</td></tr>`;
+        const txt = s === "?" ? "Sin dato" : s ? `${s[0]}–${s[1]}` : "Cerrado";
+        return `<tr data-day="${d}" class="${d === day ? "today" : ""}"><td>${DAYS[d]}</td><td>${txt}</td></tr>`;
       }).join("")}</table>${p.hoursNote ? `<p class="note" style="margin:6px 0 0">${esc(p.hoursNote)}</p>` : ""}`;
     }
 
@@ -647,12 +866,13 @@
           className: "", iconSize: [32, 32], iconAnchor: [16, 16],
           html: `<div class="pin" style="background:${p.cluster.color}">${p.rating.toFixed(1)}</div>`
         });
-        const o = openState(p);
-        markers[p.id] = L.marker([p.lat, p.lng], { icon, title: p.name }).addTo(map).bindPopup(
-          `<b>${esc(p.name)}</b><br>${esc(p.kind)} · ${esc(p.colonia)}<br>
+        markers[p.id] = L.marker([p.lat, p.lng], { icon, title: p.name }).addTo(map).bindPopup(() => {
+          const o = openState(p);
+          return `<b>${esc(p.name)}</b><br>${esc(p.kind)} · ${esc(p.colonia)}<br>
            <span style="color:#ffb800">${stars(p.rating)} ${p.rating.toFixed(1)}</span><br>
            <span class="open open--${o.state}">${o.label}</span><br>
-           <a href="#card-${p.id}">Ver ficha ↓</a>`);
+           <a href="#card-${p.id}" data-card="${p.id}">Ver ficha ↓</a>`;
+        });
       });
       map.fitBounds(L.latLngBounds(PLACES.filter(p => p.municipio !== "Chapala").map(p => [p.lat, p.lng])).pad(0.1));
     }
@@ -665,6 +885,7 @@
       const zones = [...new Set(PLACES.map(p => p.zone))].sort();
       document.getElementById("zoneSel").innerHTML = `<option value="all">Todas las zonas</option>` +
         zones.map(z => `<option value="${esc(z)}">${esc(z)}</option>`).join("");
+      document.getElementById("tourOnly").setAttribute("aria-pressed", state.tourOnly);
       document.getElementById("typeChips").addEventListener("click", e => {
         const b = e.target.closest("[data-type]"); if (!b) return;
         state.type = b.dataset.type;
@@ -708,7 +929,7 @@
           <p style="margin:0">${esc(p.blurb)}</p>
           ${tourBox}
           <div>
-            <p class="open open--${o.state}" style="margin:0 0 6px">${o.label}</p>
+            <p class="open open--${o.state}" data-open="${p.id}" style="margin:0 0 6px">${o.label}</p>
             ${hoursTable(p)}
           </div>
           <details class="src"><summary>Fuentes (${p.sources.length})</summary>
@@ -749,7 +970,7 @@
         const [label, color] = verdict[r.verdict];
         return `<div class="trow">
           <div class="verdict" style="color:${color}">${label}</div>
-          <div><h4>${r.id ? `<a href="#card-${r.id}" style="border:0;color:#fff">${esc(r.name)}</a>` : esc(r.name)}</h4><p>${esc(r.text)}</p></div>
+          <div><h4>${r.id ? `<a href="#card-${r.id}" data-card="${r.id}" style="border:0;color:#fff">${esc(r.name)}</a>` : esc(r.name)}</h4><p>${esc(r.text)}</p></div>
         </div>`;
       }).join("");
     }
@@ -757,6 +978,24 @@
     function renderRadar() {
       document.getElementById("radarList").innerHTML = RADAR.map(r => `<li><b>${esc(r.name)}</b><span>${esc(r.note)}</span></li>`).join("");
     }
+
+    function resetFilters() {
+      Object.assign(state, { type: "all", zone: "all", tourOnly: false });
+      document.querySelectorAll("#typeChips .chip").forEach(c => c.setAttribute("aria-pressed", c.dataset.type === "all"));
+      document.getElementById("zoneSel").value = "all";
+      document.getElementById("tourOnly").setAttribute("aria-pressed", "false");
+    }
+
+    function goToCard(id) {
+      if (!document.getElementById(`card-${id}`)) { resetFilters(); renderCards(); }
+      const el = document.getElementById(`card-${id}`);
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+
+    document.addEventListener("click", e => {
+      const link = e.target.closest("[data-card]");
+      if (link) { e.preventDefault(); goToCard(link.dataset.card); }
+    });
 
     document.addEventListener("click", e => {
       const a = e.target.closest("[data-focus]");
@@ -773,7 +1012,19 @@
     renderTours();
     renderRadar();
     renderMap();
-    setInterval(renderCards, 60000);
+    // Actualiza estado y día resaltado sin reconstruir las fichas (conserva foco y fuentes abiertas).
+    function refreshTimes() {
+      const { day } = gdlNow();
+      PLACES.forEach(p => {
+        const el = document.querySelector(`[data-open="${p.id}"]`);
+        if (!el) return;
+        const o = openState(p);
+        el.className = `open open--${o.state}`;
+        el.textContent = o.label;
+        el.parentElement.querySelectorAll("tr[data-day]").forEach(tr => tr.classList.toggle("today", Number(tr.dataset.day) === day));
+      });
+    }
+    setInterval(refreshTimes, 60000);
   </script>
 </body>
 </html>
