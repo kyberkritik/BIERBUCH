@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#000000" />
+  <title>Cerveza en Guadalajara</title>
+  <meta name="description" content="Guía BIERBUCH de cervecerías, taprooms, bares y fábricas de cerveza en Guadalajara, Zapopan y alrededores: ratings, horarios, zonas por colonia, clusters y tours." />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
+  <style>
+    :root {
+      --bg: #000;
+      --fg: #fff;
+      --accent: #ffb800;
+      --muted: #9a9a9a;
+      --line: #fff;
+      --card-bg: #0a0a0a;
+      --ok: #3ddc84;
+      --warn: #ff5a3c;
+      --gutter: 16px;
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0; padding: 0;
+      background: var(--bg); color: var(--fg);
+      font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+    a { color: var(--accent); text-decoration: none; border-bottom: 1px solid var(--accent); }
+    a:hover { background: var(--accent); color: var(--bg); }
+    .wrap { max-width: 1280px; margin: 0 auto; padding: 0 var(--gutter); }
+
+    /* Masthead */
+    .masthead { border-bottom: 4px solid var(--line); padding: 32px 0 0; }
+    .back { font-size: 11px; letter-spacing: .2em; text-transform: uppercase; border: 0; color: var(--muted); }
+    .logo {
+      font-size: clamp(44px, 12vw, 120px); font-weight: 900; letter-spacing: -0.04em;
+      line-height: .88; margin: 12px 0 0; text-transform: uppercase;
+    }
+    .logo span { color: var(--accent); display: block; }
+    .tagline { font-size: 13px; letter-spacing: .18em; text-transform: uppercase; color: var(--muted); margin: 16px 0 0; line-height: 1.6; }
+    .bar { height: 12px; background: var(--accent); margin-top: 24px; }
+
+    /* Stat strip */
+    .strip { display: grid; grid-template-columns: repeat(4, 1fr); border-bottom: 2px solid var(--line); }
+    .strip div { padding: 16px var(--gutter); border-right: 1px solid #333; }
+    .strip div:last-child { border-right: 0; }
+    .strip b { display: block; font-size: clamp(28px, 7vw, 44px); font-weight: 900; color: var(--accent); line-height: 1; }
+    .strip small { font-size: 10px; letter-spacing: .18em; text-transform: uppercase; color: var(--muted); }
+    @media (max-width: 560px) {
+      .strip { grid-template-columns: repeat(2, 1fr); }
+      .strip div:nth-child(2) { border-right: 0; }
+      .strip div:nth-child(-n+2) { border-bottom: 1px solid #333; }
+    }
+
+    /* Sticky nav */
+    nav.jump {
+      position: sticky; top: 0; z-index: 1000; background: var(--bg);
+      border-bottom: 2px solid var(--line);
+      display: flex; gap: 0; overflow-x: auto; scrollbar-width: none;
+    }
+    nav.jump::-webkit-scrollbar { display: none; }
+    nav.jump a {
+      flex: 0 0 auto; border: 0; padding: 14px 16px; font-size: 11px; font-weight: 700;
+      letter-spacing: .18em; text-transform: uppercase; color: var(--fg); border-right: 1px solid #333;
+    }
+    nav.jump a:hover { background: var(--accent); color: #000; }
+
+    section { padding: 40px 0 8px; }
+    h2.sec {
+      font-size: clamp(28px, 7vw, 56px); font-weight: 900; text-transform: uppercase;
+      letter-spacing: -0.03em; line-height: .95; margin: 0 0 8px;
+    }
+    h2.sec em { font-style: normal; color: var(--accent); }
+    .lede { color: var(--muted); font-size: 14px; line-height: 1.6; margin: 0 0 24px; max-width: 72ch; }
+
+    /* Notice */
+    .notice {
+      border: 2px solid var(--accent); padding: 14px 16px; font-size: 13px; line-height: 1.55; margin: 24px 0 0;
+    }
+    .notice b { color: var(--accent); text-transform: uppercase; letter-spacing: .12em; font-size: 11px; display: block; margin-bottom: 4px; }
+
+    /* Map */
+    #map { height: 62vh; min-height: 340px; max-height: 620px; border: 2px solid var(--line); background: #111; }
+    .leaflet-container { font-family: inherit; }
+    .leaflet-popup-content-wrapper, .leaflet-popup-tip { background: #000; color: #fff; border: 2px solid var(--accent); border-radius: 0; }
+    .leaflet-popup-content { margin: 12px 14px; font-size: 13px; line-height: 1.4; }
+    .leaflet-popup-content b { font-size: 15px; }
+    .leaflet-container a.leaflet-popup-close-button { color: #fff; }
+    .pin {
+      width: 32px; height: 32px; border: 2px solid #000; border-radius: 50%;
+      display: grid; place-items: center; font-size: 11px; font-weight: 900; color: #000;
+      box-shadow: 0 0 0 2px #fff;
+    }
+    .legend { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+    .legend span { font-size: 11px; letter-spacing: .1em; text-transform: uppercase; display: inline-flex; align-items: center; gap: 6px; }
+    .legend i { width: 12px; height: 12px; border-radius: 50%; display: inline-block; border: 1px solid #fff; }
+
+    /* Clusters */
+    .clusters { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
+    .cluster { border: 2px solid var(--line); padding: 16px; background: var(--card-bg); position: relative; }
+    .cluster::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 8px; background: var(--c); }
+    .cluster h3 { margin: 0 0 4px 8px; font-size: 20px; font-weight: 900; text-transform: uppercase; letter-spacing: -0.01em; }
+    .cluster .meta { margin: 0 0 10px 8px; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+    .cluster ul { margin: 0 0 0 8px; padding: 0; list-style: none; font-size: 14px; }
+    .cluster li { padding: 6px 0; border-top: 1px solid #222; display: flex; justify-content: space-between; gap: 8px; }
+    .cluster li span:last-child { color: var(--accent); font-weight: 700; white-space: nowrap; }
+    .cluster .walk { margin: 10px 0 0 8px; font-size: 12px; color: var(--muted); line-height: 1.5; }
+
+    /* Filters */
+    .filters { display: grid; gap: 12px; margin-bottom: 24px; }
+    .chips { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; }
+    .chips::-webkit-scrollbar { display: none; }
+    .chip {
+      flex: 0 0 auto; background: transparent; color: var(--fg); border: 2px solid var(--line);
+      padding: 9px 12px; font: 700 11px/1 inherit; font-family: inherit; letter-spacing: .14em; text-transform: uppercase; cursor: pointer;
+      min-height: 40px;
+    }
+    .chip[aria-pressed="true"] { background: var(--accent); color: #000; border-color: var(--accent); }
+    .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+    select {
+      background: #000; color: #fff; border: 2px solid var(--line); padding: 9px 10px; font: inherit; font-size: 13px; min-height: 40px; border-radius: 0;
+    }
+    .count { font-size: 11px; letter-spacing: .18em; text-transform: uppercase; color: var(--muted); }
+
+    /* Cards */
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; }
+    @media (max-width: 400px) { .grid { grid-template-columns: 1fr; } }
+    .card { border: 2px solid var(--line); background: var(--card-bg); display: flex; flex-direction: column; }
+    .card__top { padding: 16px; border-bottom: 1px solid #333; display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: start; }
+    .kicker { font-size: 10px; letter-spacing: .2em; text-transform: uppercase; color: var(--accent); margin: 0 0 6px; }
+    .card h3 { margin: 0; font-size: 22px; font-weight: 900; line-height: 1.05; letter-spacing: -0.01em; }
+    .where { font-size: 12px; color: var(--muted); margin: 6px 0 0; line-height: 1.4; }
+    .score { text-align: right; }
+    .score b { display: block; font-size: 34px; font-weight: 900; line-height: 1; color: var(--accent); }
+    .stars { font-size: 12px; letter-spacing: 1px; color: var(--accent); white-space: nowrap; }
+    .score small { display: block; font-size: 9px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); margin-top: 4px; }
+    .card__body { padding: 14px 16px 16px; display: grid; gap: 12px; font-size: 14px; line-height: 1.5; flex: 1; }
+    .tags { display: flex; flex-wrap: wrap; gap: 6px; }
+    .tag { font-size: 10px; letter-spacing: .14em; text-transform: uppercase; border: 1px solid #fff; padding: 3px 7px; }
+    .tag--a { border-color: var(--accent); color: var(--accent); }
+    .tag--w { border-color: var(--warn); color: var(--warn); }
+    .tag--ok { border-color: var(--ok); color: var(--ok); }
+    .open { font-size: 11px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; }
+    .open--y { color: var(--ok); }
+    .open--n { color: var(--warn); }
+    .open--u { color: var(--muted); }
+    .hours { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .hours td { padding: 3px 0; border-top: 1px solid #222; }
+    .hours td:last-child { text-align: right; font-variant-numeric: tabular-nums; }
+    .hours tr.today td { color: var(--accent); font-weight: 700; }
+    .note { font-size: 12px; color: var(--muted); }
+    .tour { border-left: 4px solid var(--accent); padding: 6px 10px; font-size: 13px; background: #141000; }
+    .actions { display: flex; gap: 8px; flex-wrap: wrap; padding: 0 16px 16px; }
+    .btn {
+      border: 2px solid var(--line); padding: 10px 12px; font-size: 11px; font-weight: 700;
+      letter-spacing: .14em; text-transform: uppercase; color: #fff; min-height: 40px; display: inline-flex; align-items: center;
+    }
+    .btn--a { border-color: var(--accent); background: var(--accent); color: #000; }
+    .btn:hover { background: #fff; color: #000; }
+    details.src summary { cursor: pointer; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+    details.src ul { margin: 6px 0 0; padding-left: 18px; font-size: 12px; word-break: break-word; }
+
+    /* Tours table */
+    .tours { display: grid; gap: 12px; }
+    .trow { border: 2px solid var(--line); padding: 14px 16px; display: grid; grid-template-columns: 120px 1fr; gap: 12px; background: var(--card-bg); }
+    .trow .verdict { font-size: 11px; font-weight: 900; letter-spacing: .14em; text-transform: uppercase; }
+    .trow h4 { margin: 0 0 4px; font-size: 17px; }
+    .trow p { margin: 0; font-size: 13px; line-height: 1.55; color: #ddd; }
+    @media (max-width: 520px) { .trow { grid-template-columns: 1fr; gap: 6px; } }
+
+    .radar { columns: 2 260px; column-gap: 24px; padding: 0; margin: 0; list-style: none; }
+    .radar li { break-inside: avoid; border-top: 1px solid #333; padding: 10px 0; font-size: 14px; line-height: 1.45; }
+    .radar b { display: block; }
+    .radar span { color: var(--muted); font-size: 12px; }
+
+    .method { font-size: 13px; line-height: 1.6; color: #ccc; max-width: 80ch; }
+    .method code { color: var(--accent); }
+    footer { border-top: 4px solid var(--line); margin-top: 48px; padding: 24px 0 48px; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+  </style>
+</head>
+<body>
+  <header class="masthead">
+    <div class="wrap">
+      <a class="back" href="index.html">← BIERBUCH</a>
+      <h1 class="logo">Cerveza en<span>Guadalajara</span></h1>
+      <p class="tagline">Cervecerías · taprooms · bares · fábricas<br />Guadalajara · Zapopan · Ajijic · Tlaquepaque</p>
+    </div>
+    <div class="bar" aria-hidden="true"></div>
+  </header>
+
+  <div class="strip wrap" id="strip" style="padding:0"></div>
+
+  <nav class="jump" aria-label="Secciones">
+    <a href="#mapa">Mapa</a>
+    <a href="#zonas">Zonas</a>
+    <a href="#lugares">Lugares</a>
+    <a href="#tours">Tours</a>
+    <a href="#radar">En el radar</a>
+    <a href="#metodo">Método</a>
+  </nav>
+
+  <main class="wrap">
+    <div class="notice">
+      <b>Antes de ir</b>
+      Datos reunidos en octubre de 2026 a partir de guías, prensa y directorios públicos (enlazados en cada ficha). Los horarios cambian seguido y varias fuentes se contradicen: cuando hay discrepancia se indica. Confirma por teléfono o Instagram antes de salir, sobre todo para tours.
+    </div>
+
+    <section id="mapa">
+      <h2 class="sec">Mapa &amp; <em>clusters</em></h2>
+      <p class="lede">Cada punto se colorea según el cluster de ubicación al que pertenece (agrupación automática por distancia: lugares a menos de ~750 m entre sí forman una misma zona caminable). Las coordenadas son aproximadas; usa el botón “Cómo llegar” de cada ficha para la dirección exacta.</p>
+      <div id="map" role="region" aria-label="Mapa de cervecerías"></div>
+      <div class="legend" id="legend"></div>
+    </section>
+
+    <section id="zonas">
+      <h2 class="sec">Zonas por <em>colonia</em></h2>
+      <p class="lede">Clusters detectados y la colonia o zona dominante de cada uno, con su mejor calificado y una sugerencia de ruta.</p>
+      <div class="clusters" id="clusters"></div>
+    </section>
+
+    <section id="lugares">
+      <h2 class="sec">Todos los <em>lugares</em></h2>
+      <p class="lede">Filtra por tipo o por zona. “Abierto ahora” se calcula con la hora de Guadalajara y el horario publicado (cuando existe).</p>
+      <div class="filters">
+        <div class="chips" id="typeChips" role="group" aria-label="Tipo"></div>
+        <div class="row">
+          <select id="zoneSel" aria-label="Zona"></select>
+          <select id="sortSel" aria-label="Ordenar">
+            <option value="rating">Ordenar: rating</option>
+            <option value="name">Ordenar: nombre</option>
+            <option value="zone">Ordenar: zona</option>
+            <option value="open">Ordenar: abierto ahora</option>
+          </select>
+          <button class="chip" id="tourOnly" aria-pressed="false">Solo con tour</button>
+          <span class="count" id="count"></span>
+        </div>
+      </div>
+      <div class="grid" id="cards"></div>
+    </section>
+
+    <section id="tours">
+      <h2 class="sec">¿Hay <em>tours</em> de fábrica?</h2>
+      <p class="lede">Resumen de qué cervecerías permiten conocer su planta, según lo publicado. Todas piden reservar con anticipación.</p>
+      <div class="tours" id="toursList"></div>
+    </section>
+
+    <section id="radar">
+      <h2 class="sec">En el <em>radar</em></h2>
+      <p class="lede">Nombres que aparecen en guías y listados, pero de los que no pudimos confirmar dirección u horario. No están en el mapa.</p>
+      <ul class="radar" id="radarList"></ul>
+    </section>
+
+    <section id="metodo">
+      <h2 class="sec">Método</h2>
+      <div class="method">
+        <p><b>Rating BIERBUCH (1–5):</b> calificación editorial que pondera oferta cervecera (variedad, cerveza propia o de grifo), reputación en guías y prensa, experiencia (comida, espacio, tours) y certeza de los datos. No es un promedio de Google ni de Tripadvisor. Cuando una fuente publica una calificación de usuarios, aparece aparte como “ref.”.</p>
+        <p><b>Clusters:</b> se calculan en el navegador con un DBSCAN sencillo sobre distancia haversine (<code>eps = 750 m</code>, <code>mínimo 2 lugares</code>). Los lugares sin vecinos cercanos quedan como “destino propio”. El nombre de cada cluster es la zona más frecuente entre sus miembros.</p>
+        <p><b>Horarios:</b> tomados de la fuente más reciente encontrada. Si dos fuentes difieren, se muestra la más reciente y se marca “fuentes discrepan”.</p>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap">BIERBUCH · Guía de cerveza GDL · actualizada oct 2026 · bebe con responsabilidad</div>
+  </footer>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+  <script>
+    // Horario semanal: índice 0 = domingo … 6 = sábado. null = cerrado.
+    const PLACES = [
+      {
+        id: "loba", name: "Cerveza Loba · UMHO", kind: "Fábrica + gastropub", types: ["artesanal", "fabrica"],
+        zone: "Santa Tere / Americana", colonia: "Santa Teresita (junto a col. Americana)", municipio: "Guadalajara",
+        address: "Gregorio Dávila 76, Guadalajara", lat: 20.6788, lng: -103.3665,
+        rating: 4.6,
+        blurb: "Cervecería tapatía (2015) con fábrica, tasting room y el gastropub UMHO en el mismo espacio, cerca del Mercado Santa Tere. Siete estilos de la casa: witbier, IPA, porter y más.",
+        hours: [["13:00", "19:00"], null, ["14:00", "01:00"], ["14:00", "01:00"], ["14:00", "01:00"], ["14:00", "01:00"], ["14:00", "01:00"]],
+        hoursNote: "Fuentes discrepan (Yelp marca horario diurno L–V). Lunes sin dato.",
+        tour: { has: "si", text: "Guías de turismo reportan recorridos guiados por el proceso (fermentación → cata en el tasting room). También hay experiencias de arquitectura + cervecería que terminan aquí. Reservar." },
+        phone: "+52 33 2035 6401",
+        tags: ["Cerveza propia", "Comida", "Tour"],
+        sources: ["https://www.mexicodesconocido.com.mx/tour-de-cerveza-en-guadalajara.html", "https://forbes.com.mx/?p=703361", "https://www.yelp.com/biz/loba-guadalajara", "https://restaurantguru.com/Umho-Guadalajara"]
+      },
+      {
+        id: "patan", name: "Patán Ale House", kind: "Bar de grifos", types: ["bar", "artesanal"],
+        zone: "Americana", colonia: "Americana", municipio: "Guadalajara",
+        address: "José María Morelos 1281, Col. Americana, Guadalajara", lat: 20.6747, lng: -103.3672,
+        rating: 4.6, ref: { v: 4.5, src: "TableJourney" },
+        blurb: "Unos 24 grifos con cerveza artesanal tapatía, nacional e internacional. Terraza en la azotea, palomitas de camarón y costillas BBQ el fin de semana. El #1 en la lista de cervecerías de Wanderlog.",
+        hours: [["14:00", "22:00"], null, ["18:00", "00:30"], ["18:00", "00:30"], ["18:00", "00:30"], ["18:00", "01:00"], ["18:00", "01:00"]],
+        hoursNote: "Fuentes discrepan en sábado (14:00 vs 18:00) y domingo.",
+        tour: { has: "no" },
+        phone: "+52 33 3826 6613", ig: "patanalehouse",
+        tags: ["~24 grifos", "Rooftop", "Comida"],
+        sources: ["https://www.tripadvisor.com/Restaurant_Review-g150798-d12316739-Reviews-Patan_Ale_House-Guadalajara_Guadalajara_Metropolitan_Area.html", "https://restaurantguru.com/PATAN-ALE-HOUSE-Guadalajara", "https://wanderlog.com/list/geoCategory/12939/best-guadalajara-breweries-and-craft-beer"]
+      },
+      {
+        id: "trapiche", name: "Casa Trapiche", kind: "Tasting room de Cervecería de Colima", types: ["artesanal", "taproom"],
+        zone: "Ladrón de Guevara", colonia: "Ladrón de Guevara / Americana", municipio: "Guadalajara",
+        address: "Gabriel Ramos Millán 146, Guadalajara", lat: 20.6812, lng: -103.3768,
+        rating: 4.4,
+        blurb: "Casa de los años 40 con plantas y terraza en la azotea donde se sirve Colimita y el resto de Cervecería de Colima. Tacos, esquites con chicharrón y hamburguesas.",
+        hours: null,
+        tour: { has: "no", text: "La fábrica está en Colima (Jardín Trapiche); aquí solo se degusta." },
+        phone: "+52 33 3825 4762", ig: "casatrapiche",
+        tags: ["Colimita", "Terraza", "Comida"],
+        sources: ["https://foodandpleasure.com/casa-trapiche-guadalajara", "https://forbes.com.mx/?p=703361"]
+      },
+      {
+        id: "puesto", name: "El Puesto Ambulante", kind: "Bar de grifos + antojitos", types: ["bar", "artesanal"],
+        zone: "Ladrón de Guevara", colonia: "Ladrón de Guevara", municipio: "Guadalajara",
+        address: "Juan Manuel 1562, Guadalajara", lat: 20.6815, lng: -103.3764,
+        rating: 4.2,
+        blurb: "Pequeño y escondido, frente a Casa Trapiche. Nueve líneas de barril (de la casa, invitadas y tepache) con comida callejera mexicana: tacos de discada y más.",
+        hours: null,
+        tour: { has: "no" },
+        tags: ["9 grifos", "Tepache", "Tacos"],
+        sources: ["https://forbes.com.mx/?p=703361", "https://vibemap.com/features/guides/the-best-brewhouses-and-taprooms-in-guadalajara"]
+      },
+      {
+        id: "deposito", name: "El Depósito", kind: "Bottle shop + jardín", types: ["bar", "internacional"],
+        zone: "Chapultepec", colonia: "Americana", municipio: "Guadalajara",
+        address: "Av. Chapultepec Sur 129, Col. Americana, Guadalajara", lat: 20.6727, lng: -103.3693,
+        rating: 4.1,
+        blurb: "Tienda y bar con jardín cervecero sencillo y una gama enorme de botellas importadas (sobre todo belgas) y artesanales. Las importadas son caras; lo local, barato.",
+        hours: null,
+        tour: { has: "no" },
+        tags: ["Importadas", "Belgas", "Jardín"],
+        sources: ["https://www.theculturetrip.com/north-america/mexico/articles/the-best-bars-in-chapultepec-guadalajara", "https://www.airbnb.com/things-to-do/places/2523992"]
+      },
+      {
+        id: "almacen", name: "Almacén de Botellas", kind: "Bar + tienda", types: ["bar", "artesanal", "internacional"],
+        zone: "Americana", colonia: "Americana", municipio: "Guadalajara",
+        address: "Av. Miguel Hidalgo y Costilla 1151, Guadalajara", lat: 20.6768, lng: -103.3612,
+        rating: 4.0,
+        blurb: "Carta de ~44 etiquetas artesanales locales, nacionales e importadas, de claras a oscuras; se puede beber ahí o llevar. Otras sucursales en Patria y Providencia.",
+        hours: null,
+        tour: { has: "no" },
+        phone: "+52 33 1479 4650", ig: "almacendebotellas",
+        tags: ["~44 etiquetas", "Para llevar", "3 sucursales"],
+        sources: ["https://foodandpleasure.com/bar-de-cerveza-en-guadalajara/"]
+      },
+      {
+        id: "irish", name: "The Real Irish Pub", kind: "Pub irlandés", types: ["internacional", "bar"],
+        zone: "Chapultepec", colonia: "Americana", municipio: "Guadalajara",
+        address: "Libertad 1900, Col. Americana, Guadalajara", lat: 20.6712, lng: -103.3712,
+        rating: 3.8,
+        blurb: "Según un reporte de 2023, el único bar de la ciudad con Guinness de barril. Ambiente de pub y deportes.",
+        hours: null,
+        tour: { has: "no" },
+        tags: ["Guinness de barril", "Deportes"],
+        status: "verificar",
+        sources: ["https://theguadalajarareporter.net/index.php/news/news/guadalajara/59601-bridge-club-news-march-18-2023"]
+      },
+      {
+        id: "chapu", name: "La Cervecería Chapultepec", kind: "Cadena comercial", types: ["comercial", "bar"],
+        zone: "Chapultepec", colonia: "Americana", municipio: "Guadalajara",
+        address: "Av. Chapultepec, Col. Americana, Guadalajara", lat: 20.6740, lng: -103.3694,
+        rating: 3.2,
+        blurb: "La cadena nació aquí en 2015 con su fórmula de precio único para todo. Cerveza comercial (Modelo/Heineken) en tarro, botanas, mucho ruido y mucho ambiente. Reseñas mixtas en servicio y comida.",
+        hours: null,
+        tour: { has: "no" },
+        tags: ["Precio único", "Comercial", "Varias sucursales"],
+        sources: ["https://wanderlog.com/place/details/1830009/cervecería-chapultepec"]
+      },
+      {
+        id: "grillo", name: "El Grillo", kind: "Bar de cerveza y mezcal", types: ["bar", "artesanal", "internacional"],
+        zone: "Chapultepec", colonia: "Americana", municipio: "Guadalajara",
+        address: "Av. Chapultepec, Col. Americana, Guadalajara", lat: 20.6760, lng: -103.3697,
+        rating: 3.5,
+        blurb: "Bar pequeño y oscuro con artesanales locales y de EE. UU. y buenos mezcales; terraza arriba. Un listado lo marca como cerrado temporalmente.",
+        hours: null,
+        tour: { has: "no" },
+        status: "cerrado?",
+        tags: ["Mezcal", "Terraza"],
+        sources: ["https://www.theculturetrip.com/north-america/mexico/articles/the-best-bars-in-chapultepec-guadalajara", "https://lugares.inah.gob.mx/en/node/5775"]
+      },
+      {
+        id: "blanca", name: "Cervecería La Blanca", kind: "Brewpub", types: ["artesanal", "micro"],
+        zone: "Arcos Vallarta", colonia: "Arcos Vallarta", municipio: "Guadalajara",
+        address: "Lope de Vega 127, Arcos Vallarta, Guadalajara", lat: 20.6760, lng: -103.3825,
+        rating: 4.3, ref: { v: 4.3, src: "TableJourney" },
+        blurb: "Cerveza de estilo alemán (trigo, bock, ahumada) y ales de temporada con comida de pub. Degustaciones completas a petición y personal que habla inglés. #2 en Wanderlog.",
+        hours: [null, ["14:00", "01:00"], ["14:00", "01:00"], ["14:00", "01:00"], ["14:00", "01:00"], ["14:00", "01:00"], ["14:00", "01:00"]],
+        hoursNote: "Yelp (dic 2025). Una ficha de Tripadvisor aparecía como cerrada: confirmar.",
+        tour: { has: "no", text: "Ofrece degustaciones guiadas de toda la línea a petición, no recorrido de planta." },
+        phone: "+52 33 1765 2870",
+        status: "verificar",
+        tags: ["Estilo alemán", "Degustación", "Comida"],
+        sources: ["https://www.yelp.com/biz/cervecer%C3%ADa-la-blanca-guadalajara-2", "https://www.lonelyplanet.com/articles/best-places-to-eat-in-guadalajara-mexico", "https://www.cervecerialablanca.com/"]
+      },
+      {
+        id: "escala", name: "Cervecería Escala", kind: "Brewpub", types: ["artesanal", "micro"],
+        zone: "Providencia", colonia: "Providencia", municipio: "Guadalajara",
+        address: "Rubén Darío 1519, Providencia, Guadalajara", lat: 20.6955, lng: -103.3890,
+        rating: 4.3, ref: { v: 4.4, src: "TableJourney" },
+        blurb: "Brewpub de Providencia con 11 grifos: IPA y stout de la casa con tacos de camarón estilo Ensenada.",
+        hours: null,
+        tour: { has: "no" },
+        tags: ["11 grifos", "Mariscos"],
+        sources: ["https://tablejourney.com/mexico/guadalajara/breweries/fortuna-cervezas/"]
+      },
+      {
+        id: "craftchapalita", name: "Craft Beer Bottle Shop & Taproom", kind: "Bottle shop + taproom", types: ["artesanal", "taproom"],
+        zone: "Chapalita", colonia: "Chapalita", municipio: "Guadalajara",
+        address: "Av. Tepeyac, Chapalita, Guadalajara", lat: 20.6620, lng: -103.4040,
+        rating: 3.9,
+        blurb: "Local compacto con ~140 cervezas, al menos 30 de microcervecerías tapatías. La reseña que lo describe es antigua: confirmar que sigue abierto.",
+        hours: null,
+        tour: { has: "no" },
+        status: "verificar",
+        tags: ["~140 etiquetas", "Locales"],
+        sources: ["https://theguadalajarareporter.net/index.php/featured/53877-guadalajara-starts-to-take-beer-seriously"]
+      },
+      {
+        id: "mccarthys", name: "McCarthy's Irish Pub", kind: "Pub irlandés", types: ["internacional", "bar"],
+        zone: "Galerías / Vallarta", colonia: "La Estancia (Plaza Galerías)", municipio: "Zapopan",
+        address: "Plaza Galerías Guadalajara, Av. Vallarta, Zapopan", lat: 20.6790, lng: -103.4380,
+        rating: 3.5,
+        blurb: "Pub de temática irlandesa dentro de Plaza Galerías. Opción práctica para importadas si estás por Av. Vallarta.",
+        hours: null,
+        tour: { has: "no" },
+        status: "verificar",
+        tags: ["Importadas", "Centro comercial"],
+        sources: ["https://celticlifeintl.com/?p=7689"]
+      },
+      {
+        id: "minerva", name: "Cervecería Minerva · La Taberna", kind: "Fábrica + taberna", types: ["artesanal", "fabrica"],
+        zone: "Zapopan sur", colonia: "Los Periodistas", municipio: "Zapopan",
+        address: "Periférico Sur 4250, Col. Los Periodistas, Zapopan", lat: 20.6400, lng: -103.4270,
+        rating: 4.4, ref: { v: 4.3, src: "TableJourney" },
+        blurb: "La cervecería artesanal pionera de Guadalajara (desde 2002/2004). La taberna está junto a la planta: Colonial Stout, Viena Amber, pale ales y 12+ estilos rotativos. Desde 2023 la marca pertenece a Grupo Cielito Lindo.",
+        hours: [["14:00", "20:00"], ["14:00", "01:00"], ["14:00", "01:00"], ["14:00", "01:00"], ["14:00", "01:00"], ["14:00", "01:00"], ["14:00", "01:00"]],
+        hoursNote: "Chilango. Forbes indica apertura diaria desde las 12:00.",
+        tour: { has: "si", text: "Recorrido por la planta jueves y sábado a las 14:00 (~1 h 30). Grupos de hasta 15, reservar con ≥24 h. ~$250 MXN con cata y regalo (precios 2020–2025; confirmar tras el cambio de dueño)." },
+        tags: ["Pionera", "Tour jue/sáb", "12+ estilos"],
+        sources: ["https://www.chilango.com/viajes/cervecerias-de-mexico/", "https://www.telediario.mx/comunidad/llega-ruta-cerveza-artesanal-guadalajara-zapopan", "https://www.milenio.com/negocios/grupo-cielito-lindo-adquiere-marcas-minerva"]
+      },
+      {
+        id: "fortuna", name: "Cervecería Fortuna", kind: "Fábrica + beer garden", types: ["artesanal", "fabrica", "micro"],
+        zone: "La Primavera (Nogales)", colonia: "Anexo a La Primavera", municipio: "Zapopan",
+        address: "Carretera Guadalajara–Nogales 4380 (km 22.5), Anexo a La Primavera, Zapopan", lat: 20.7150, lng: -103.5200,
+        rating: 4.5,
+        blurb: "Premiada como mejor cervecería mexicana. Al inicio de la Ruta del Tequila, junto al bosque La Primavera. Bar y jardín para ~200 personas; se puede comprar en vaso o growler (llamar antes).",
+        hours: [null, ["09:00", "16:00"], ["09:00", "16:00"], ["09:00", "16:00"], ["09:00", "16:00"], ["09:00", "16:00"], ["09:00", "13:00"]],
+        hoursNote: "Horario de planta según Tripadvisor; el jardín puede variar.",
+        tour: { has: "si", text: "Recorridos guiados en español o inglés con degustación de seis estilos. Mínimo 5–6 personas, reservar al menos un día antes. Civitatis vende además un day trip Fortuna + destilería La Rojeña (Tequila)." },
+        phone: "+52 33 3627 7132",
+        tags: ["Tour guiado", "Ruta del Tequila", "Growlers"],
+        sources: ["https://www.tripadvisor.com/Attraction_Review-g1006488-d28028055-Reviews-Cerveceria_Fortuna-Zapopan_Guadalajara_Metropolitan_Area.html", "https://www.mexicodesconocido.com.mx/cerveceria-fortuna.html", "https://theguadalajarareporter.net/index.php/columns/columns/john-pint/53646-return-to-zapopan-s-cerveceria-fortuna-winner-of-best-mexican-brewery-prize", "https://www.civitatis.com/en/guadalajara/fortuna-brewery-rojena-distillery-tour"]
+      },
+      {
+        id: "corazon", name: "Corazón de Malta", kind: "Microcervecería + restaurante", types: ["artesanal", "micro", "fabrica"],
+        zone: "Ajijic (Lago de Chapala)", colonia: "Centro de Ajijic", municipio: "Chapala",
+        address: "De las Flores 25, Ajijic, Jalisco", lat: 20.2990, lng: -103.2610,
+        rating: 4.3,
+        blurb: "Empezó como proyecto casero de un cervecero argentino y hoy exporta a EE. UU. Degustaciones y maridajes con platillos regionales en el Pueblo Mágico, a ~1 h de Guadalajara.",
+        hours: [["12:00", "21:30"], null, ["12:00", "21:30"], ["12:00", "21:30"], ["12:00", "21:30"], ["12:00", "21:30"], ["12:00", "21:30"]],
+        tour: { has: "parcial", text: "Degustaciones y maridajes guiados; no hay recorrido de planta publicado." },
+        tags: ["Excursión", "Maridajes", "Pueblo Mágico"],
+        sources: ["https://www.tvazteca.com/aztecauno/viajes/el-pueblo-magico-jalisco-que-tiene-la-mejor-cerveza-artesanal-y-que-muy-pocos-lo", "https://www.brewbound.com/news/keg-trading-co-announces-craft-imports-from-corazon-de-malta"]
+      }
+    ];
+
+    const TOURS_EXTRA = [
+      { name: "Grupo Modelo · planta Guadalajara", verdict: "no", text: "Cervecería Modelo de Guadalajara opera desde 1964. Grupo Modelo hace visitas en otras plantas (p. ej. Zacatecas), pero no encontramos un tour público en la de Guadalajara." },
+      { name: "Heineken México", verdict: "no", text: "Sin tour público documentado en el área metropolitana de Guadalajara." },
+      { name: "Festival de la Cerveza de Tlaquepaque", verdict: "evento", text: "Festival anual con 20–30 cervecerías artesanales y 200+ etiquetas; la 9ª edición fue el 28 feb–1 mar 2026. Buena forma de probar micros sin taproom propio." },
+      { name: "Recorridos de bares en la Americana", verdict: "evento", text: "Hay experiencias guiadas (Airbnb) de bares escondidos en la colonia Americana, con salida en Av. Chapultepec." }
+    ];
+
+    const RADAR = [
+      { name: "LaCer Laboratorio Cervecero", note: "Dispensario de barril con Loba, Pecado Capital, Fortuna, 7 Mares, KVRA, Hércules y Cholos Brewing." },
+      { name: "Gulden Draak (gastropub)", note: "Cerveza belga, salchichas alemanas, fish & chips y papas estilo belga." },
+      { name: "Temple Bar", note: "Pub irlandés con más de 120 cervezas, incluida Guinness." },
+      { name: "Zorra Bistro & Pub (Zapopan)", note: "Cervezas locales, vinos y coctelería con menú de bistró." },
+      { name: "Cervecería Cielito Lindo", note: "Fundada por Héctor Vielma; IPAs estilo New England con ingredientes de la región. Hoy también dueña de Minerva." },
+      { name: "7 Mares · Pecado Capital · KVRA", note: "Micros tapatías que se encuentran sobre todo en grifos de terceros." },
+      { name: "Cervecería Eclipse · Six Legazpi · San Lúpulo", note: "Aparecen en listados de Tripadvisor/Yelp sin dirección confirmada." }
+    ];
+
+    const TYPE_LABELS = {
+      all: "Todos", artesanal: "Artesanal", micro: "Micro", fabrica: "Fábrica / tour",
+      taproom: "Taproom", bar: "Bar", internacional: "Internacional", comercial: "Comercial"
+    };
+    const DAYS = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
+    const PALETTE = ["#ffb800", "#ff5a3c", "#3ddc84", "#4fa3ff", "#c77dff", "#ff7ac6", "#00e5d4", "#f2f2f2", "#b5e61d", "#ff9f43"];
+
+    function esc(s) {
+      return String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+    }
+
+    // ---------- Clustering (DBSCAN, haversine) ----------
+    function km(a, b) {
+      const R = 6371, rad = Math.PI / 180;
+      const dLat = (b.lat - a.lat) * rad, dLng = (b.lng - a.lng) * rad;
+      const h = Math.sin(dLat / 2) ** 2 + Math.cos(a.lat * rad) * Math.cos(b.lat * rad) * Math.sin(dLng / 2) ** 2;
+      return 2 * R * Math.asin(Math.sqrt(h));
+    }
+
+    function dbscan(points, eps, minPts) {
+      const labels = new Array(points.length).fill(undefined);
+      let c = 0;
+      const neighbors = i => points.map((_, j) => j).filter(j => km(points[i], points[j]) <= eps);
+      for (let i = 0; i < points.length; i++) {
+        if (labels[i] !== undefined) continue;
+        const n = neighbors(i);
+        if (n.length < minPts) { labels[i] = -1; continue; }
+        labels[i] = c;
+        const queue = n.filter(j => j !== i);
+        while (queue.length) {
+          const j = queue.shift();
+          if (labels[j] === -1) labels[j] = c;
+          if (labels[j] !== undefined) continue;
+          labels[j] = c;
+          const nj = neighbors(j);
+          if (nj.length >= minPts) queue.push(...nj);
+        }
+        c++;
+      }
+      return labels;
+    }
+
+    function buildClusters() {
+      const labels = dbscan(PLACES, 0.75, 2);
+      const groups = new Map();
+      PLACES.forEach((p, i) => {
+        const key = labels[i] === -1 ? `solo-${p.id}` : `c${labels[i]}`;
+        if (!groups.has(key)) groups.set(key, []);
+        groups.get(key).push(p);
+      });
+      const clusters = [...groups.entries()].map(([key, members]) => {
+        const freq = {};
+        members.forEach(m => freq[m.zone] = (freq[m.zone] || 0) + 1);
+        const zones = Object.entries(freq).sort((a, b) => b[1] - a[1]).map(([z]) => z);
+        const lat = members.reduce((s, m) => s + m.lat, 0) / members.length;
+        const lng = members.reduce((s, m) => s + m.lng, 0) / members.length;
+        const radius = Math.max(...members.map(m => km({ lat, lng }, m))) * 1000 + 250;
+        const avg = members.reduce((s, m) => s + m.rating, 0) / members.length;
+        const span = members.length > 1 ? Math.max(...members.flatMap(a => members.map(b => km(a, b)))) : 0;
+        return { key, members, solo: key.startsWith("solo"), name: members.length > 1 ? zones.slice(0, 2).join(" + ") : members[0].zone, lat, lng, radius, avg, span };
+      });
+      clusters.sort((a, b) => b.members.length - a.members.length || b.avg - a.avg);
+      clusters.forEach((c, i) => {
+        c.color = PALETTE[i % PALETTE.length];
+        c.members.forEach(m => { m.cluster = c; });
+      });
+      return clusters;
+    }
+
+    // ---------- Hours ----------
+    function gdlNow() {
+      const parts = new Intl.DateTimeFormat("en-US", {
+        timeZone: "America/Mexico_City", weekday: "short", hour: "2-digit", minute: "2-digit", hour12: false
+      }).formatToParts(new Date());
+      const get = t => parts.find(p => p.type === t).value;
+      const day = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].indexOf(get("weekday"));
+      const h = parseInt(get("hour"), 10) % 24;
+      return { day, min: h * 60 + parseInt(get("minute"), 10) };
+    }
+    const toMin = s => { const [h, m] = s.split(":").map(Number); return h * 60 + m; };
+
+    function openState(p) {
+      if (!p.hours) return { state: "u", label: "Horario sin confirmar" };
+      const { day, min } = gdlNow();
+      const inSlot = (d, m) => {
+        const slot = p.hours[d];
+        if (!slot) return false;
+        const o = toMin(slot[0]); let c = toMin(slot[1]);
+        if (c <= o) c += 1440;
+        return m >= o && m < c;
+      };
+      const prev = (day + 6) % 7;
+      if (inSlot(day, min) || inSlot(prev, min + 1440)) return { state: "y", label: "Abierto ahora" };
+      const today = p.hours[day];
+      if (today && min < toMin(today[0])) return { state: "n", label: `Cerrado · abre ${today[0]}` };
+      return { state: "n", label: "Cerrado ahora" };
+    }
+
+    function hoursTable(p) {
+      if (!p.hours) return `<p class="note">Horario no publicado en fuentes consultadas. Revisa Google Maps o sus redes.</p>`;
+      const { day } = gdlNow();
+      const order = [1, 2, 3, 4, 5, 6, 0];
+      return `<table class="hours">${order.map(d => {
+        const s = p.hours[d];
+        return `<tr class="${d === day ? "today" : ""}"><td>${DAYS[d]}</td><td>${s ? `${s[0]}–${s[1]}` : "Cerrado"}</td></tr>`;
+      }).join("")}</table>${p.hoursNote ? `<p class="note" style="margin:6px 0 0">${esc(p.hoursNote)}</p>` : ""}`;
+    }
+
+    function stars(r) {
+      const full = Math.floor(r), half = r - full >= 0.5;
+      return "★".repeat(full) + (half ? "½" : "") + "☆".repeat(5 - full - (half ? 1 : 0));
+    }
+
+    // ---------- Render ----------
+    const clusters = buildClusters();
+
+    function renderStrip() {
+      const tours = PLACES.filter(p => p.tour.has === "si").length;
+      const multi = clusters.filter(c => !c.solo).length;
+      document.getElementById("strip").innerHTML = `
+        <div><b>${PLACES.length}</b><small>Lugares</small></div>
+        <div><b>${multi}</b><small>Clusters</small></div>
+        <div><b>${new Set(PLACES.map(p => p.zone)).size}</b><small>Zonas</small></div>
+        <div><b>${tours}</b><small>Con tour</small></div>`;
+    }
+
+    function renderClusters() {
+      document.getElementById("clusters").innerHTML = clusters.map(c => {
+        const sorted = [...c.members].sort((a, b) => b.rating - a.rating);
+        const muni = [...new Set(c.members.map(m => m.municipio))].join(" / ");
+        const walk = c.solo
+          ? `Destino propio: ${c.members[0].tour.has === "si" ? "planea la visita con el tour." : "ve directo, no hay otros lugares cerca."}`
+          : `Caminable: ${c.span.toFixed(1)} km entre los extremos. Empieza en ${esc(sorted[0].name)}.`;
+        return `<article class="cluster" style="--c:${c.color}">
+          <h3>${esc(c.name)}</h3>
+          <p class="meta">${c.members.length} lugar${c.members.length > 1 ? "es" : ""} · ${esc(muni)} · prom. ${c.avg.toFixed(1)}</p>
+          <ul>${sorted.map(m => `<li><span>${esc(m.name)}<br><small class="note">${esc(m.colonia)}</small></span><span>${m.rating.toFixed(1)}</span></li>`).join("")}</ul>
+          <p class="walk">${walk}</p>
+        </article>`;
+      }).join("");
+    }
+
+    function renderLegend() {
+      document.getElementById("legend").innerHTML = clusters.map(c =>
+        `<span><i style="background:${c.color}"></i>${esc(c.name)}</span>`).join("");
+    }
+
+    let map;
+    const markers = {};
+    function renderMap() {
+      if (typeof L === "undefined") {
+        document.getElementById("map").innerHTML = `<p class="lede" style="padding:16px">No se pudo cargar el mapa (sin conexión). La lista y las zonas siguen disponibles abajo.</p>`;
+        return;
+      }
+      map = L.map("map", { scrollWheelZoom: false, tap: true }).setView([20.67, -103.39], 12);
+      L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
+        attribution: '&copy; OpenStreetMap &copy; CARTO', maxZoom: 19, subdomains: "abcd"
+      }).addTo(map);
+      clusters.filter(c => !c.solo).forEach(c => {
+        L.circle([c.lat, c.lng], { radius: c.radius, color: c.color, weight: 2, fillOpacity: 0.08, dashArray: "6 6" }).addTo(map);
+      });
+      PLACES.forEach(p => {
+        const icon = L.divIcon({
+          className: "", iconSize: [32, 32], iconAnchor: [16, 16],
+          html: `<div class="pin" style="background:${p.cluster.color}">${p.rating.toFixed(1)}</div>`
+        });
+        const o = openState(p);
+        markers[p.id] = L.marker([p.lat, p.lng], { icon, title: p.name }).addTo(map).bindPopup(
+          `<b>${esc(p.name)}</b><br>${esc(p.kind)} · ${esc(p.colonia)}<br>
+           <span style="color:#ffb800">${stars(p.rating)} ${p.rating.toFixed(1)}</span><br>
+           <span class="open open--${o.state}">${o.label}</span><br>
+           <a href="#card-${p.id}">Ver ficha ↓</a>`);
+      });
+      map.fitBounds(L.latLngBounds(PLACES.filter(p => p.municipio !== "Chapala").map(p => [p.lat, p.lng])).pad(0.1));
+    }
+
+    const state = { type: "all", zone: "all", sort: "rating", tourOnly: false };
+
+    function renderFilters() {
+      document.getElementById("typeChips").innerHTML = Object.entries(TYPE_LABELS).map(([k, v]) =>
+        `<button class="chip" data-type="${k}" aria-pressed="${state.type === k}">${v}</button>`).join("");
+      const zones = [...new Set(PLACES.map(p => p.zone))].sort();
+      document.getElementById("zoneSel").innerHTML = `<option value="all">Todas las zonas</option>` +
+        zones.map(z => `<option value="${esc(z)}">${esc(z)}</option>`).join("");
+      document.getElementById("typeChips").addEventListener("click", e => {
+        const b = e.target.closest("[data-type]"); if (!b) return;
+        state.type = b.dataset.type;
+        document.querySelectorAll("#typeChips .chip").forEach(c => c.setAttribute("aria-pressed", c.dataset.type === state.type));
+        renderCards();
+      });
+      document.getElementById("zoneSel").addEventListener("change", e => { state.zone = e.target.value; renderCards(); });
+      document.getElementById("sortSel").addEventListener("change", e => { state.sort = e.target.value; renderCards(); });
+      document.getElementById("tourOnly").addEventListener("click", e => {
+        state.tourOnly = !state.tourOnly; e.currentTarget.setAttribute("aria-pressed", state.tourOnly); renderCards();
+      });
+    }
+
+    function card(p) {
+      const o = openState(p);
+      const maps = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.name + ", " + p.address)}`;
+      const statusTag = p.status === "cerrado?" ? `<span class="tag tag--w">Posiblemente cerrado</span>`
+        : p.status === "verificar" ? `<span class="tag tag--w">Verificar que opera</span>` : "";
+      const tourBox = p.tour.has === "si"
+        ? `<div class="tour"><b>Tour de fábrica:</b> ${esc(p.tour.text)}</div>`
+        : p.tour.text ? `<p class="note">${esc(p.tour.text)}</p>` : "";
+      return `<article class="card" id="card-${p.id}">
+        <div class="card__top">
+          <div>
+            <p class="kicker">${esc(p.kind)}</p>
+            <h3>${esc(p.name)}</h3>
+            <p class="where"><span style="color:${p.cluster.color}">●</span> ${esc(p.colonia)} · ${esc(p.municipio)}<br>${esc(p.address)}</p>
+          </div>
+          <div class="score">
+            <b>${p.rating.toFixed(1)}</b>
+            <span class="stars" aria-label="${p.rating} de 5">${stars(p.rating)}</span>
+            <small>BIERBUCH${p.ref ? `<br>ref. ${p.ref.v} ${esc(p.ref.src)}` : ""}</small>
+          </div>
+        </div>
+        <div class="card__body">
+          <div class="tags">
+            ${p.types.map(t => `<span class="tag ${t === "fabrica" ? "tag--a" : ""}">${TYPE_LABELS[t]}</span>`).join("")}
+            ${p.tags.map(t => `<span class="tag">${esc(t)}</span>`).join("")}
+            ${statusTag}
+          </div>
+          <p style="margin:0">${esc(p.blurb)}</p>
+          ${tourBox}
+          <div>
+            <p class="open open--${o.state}" style="margin:0 0 6px">${o.label}</p>
+            ${hoursTable(p)}
+          </div>
+          <details class="src"><summary>Fuentes (${p.sources.length})</summary>
+            <ul>${p.sources.map(s => `<li><a href="${esc(s)}" target="_blank" rel="noopener">${esc(s.replace(/^https?:\/\/(www\.)?/, "").slice(0, 60))}</a></li>`).join("")}</ul>
+          </details>
+        </div>
+        <div class="actions">
+          <a class="btn btn--a" href="${maps}" target="_blank" rel="noopener">Cómo llegar</a>
+          ${p.phone ? `<a class="btn" href="tel:${p.phone.replace(/\s/g, "")}">Llamar</a>` : ""}
+          ${p.ig ? `<a class="btn" href="https://instagram.com/${esc(p.ig)}" target="_blank" rel="noopener">@${esc(p.ig)}</a>` : ""}
+          <a class="btn" href="#mapa" data-focus="${p.id}">En mapa</a>
+        </div>
+      </article>`;
+    }
+
+    function renderCards() {
+      let list = PLACES.filter(p =>
+        (state.type === "all" || p.types.includes(state.type)) &&
+        (state.zone === "all" || p.zone === state.zone) &&
+        (!state.tourOnly || p.tour.has === "si"));
+      const rank = { y: 0, n: 1, u: 2 };
+      list.sort({
+        rating: (a, b) => b.rating - a.rating,
+        name: (a, b) => a.name.localeCompare(b.name, "es"),
+        zone: (a, b) => a.zone.localeCompare(b.zone, "es") || b.rating - a.rating,
+        open: (a, b) => rank[openState(a).state] - rank[openState(b).state] || b.rating - a.rating
+      }[state.sort]);
+      document.getElementById("count").textContent = `${list.length} de ${PLACES.length}`;
+      document.getElementById("cards").innerHTML = list.length ? list.map(card).join("")
+        : `<p class="lede">Nada con esos filtros.</p>`;
+    }
+
+    function renderTours() {
+      const verdict = { si: ["Sí, con cita", "var(--ok)"], parcial: ["Degustación", "var(--accent)"], no: ["Sin tour público", "var(--warn)"], evento: ["Evento / experiencia", "var(--accent)"] };
+      const rows = PLACES.filter(p => p.tour.has !== "no").map(p => ({ name: p.name, verdict: p.tour.has, text: p.tour.text, id: p.id }))
+        .concat(TOURS_EXTRA);
+      document.getElementById("toursList").innerHTML = rows.map(r => {
+        const [label, color] = verdict[r.verdict];
+        return `<div class="trow">
+          <div class="verdict" style="color:${color}">${label}</div>
+          <div><h4>${r.id ? `<a href="#card-${r.id}" style="border:0;color:#fff">${esc(r.name)}</a>` : esc(r.name)}</h4><p>${esc(r.text)}</p></div>
+        </div>`;
+      }).join("");
+    }
+
+    function renderRadar() {
+      document.getElementById("radarList").innerHTML = RADAR.map(r => `<li><b>${esc(r.name)}</b><span>${esc(r.note)}</span></li>`).join("");
+    }
+
+    document.addEventListener("click", e => {
+      const a = e.target.closest("[data-focus]");
+      if (!a || !map) return;
+      const m = markers[a.dataset.focus];
+      if (m) setTimeout(() => { map.setView(m.getLatLng(), 15); m.openPopup(); }, 300);
+    });
+
+    renderStrip();
+    renderLegend();
+    renderClusters();
+    renderFilters();
+    renderCards();
+    renderTours();
+    renderRadar();
+    renderMap();
+    setInterval(renderCards, 60000);
+  </script>
+</body>
+</html>
