@@ -1,0 +1,971 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#000000" />
+  <title>Librerías de Guadalajara</title>
+  <meta name="description" content="Guía BIERBUCH de librerías en Guadalajara, Zapopan y alrededores: libros nuevos, cadenas, independientes, de viejo y usados, con ratings, horarios, zonas por colonia, clusters, dónde vender y ferias." />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
+  <style>
+    :root {
+      --bg: #000;
+      --fg: #fff;
+      --accent: #ffb800;
+      --muted: #9a9a9a;
+      --line: #fff;
+      --card-bg: #0a0a0a;
+      --ok: #3ddc84;
+      --warn: #ff5a3c;
+      --gutter: 16px;
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0; padding: 0;
+      background: var(--bg); color: var(--fg);
+      font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+    a { color: var(--accent); text-decoration: none; border-bottom: 1px solid var(--accent); }
+    a:hover { background: var(--accent); color: var(--bg); }
+    .wrap { max-width: 1280px; margin: 0 auto; padding: 0 var(--gutter); }
+
+    /* Masthead */
+    .masthead { border-bottom: 4px solid var(--line); padding: 32px 0 0; }
+    .back { font-size: 11px; letter-spacing: .2em; text-transform: uppercase; border: 0; color: var(--muted); }
+    .logo {
+      font-size: clamp(44px, 12vw, 120px); font-weight: 900; letter-spacing: -0.04em;
+      line-height: .88; margin: 12px 0 0; text-transform: uppercase;
+    }
+    .logo span { color: var(--accent); display: block; }
+    .tagline { font-size: 13px; letter-spacing: .18em; text-transform: uppercase; color: var(--muted); margin: 16px 0 0; line-height: 1.6; }
+    .bar { height: 12px; background: var(--accent); margin-top: 24px; }
+
+    /* Stat strip */
+    .strip { display: grid; grid-template-columns: repeat(4, 1fr); border-bottom: 2px solid var(--line); }
+    .strip div { padding: 16px var(--gutter); border-right: 1px solid #333; }
+    .strip div:last-child { border-right: 0; }
+    .strip b { display: block; font-size: clamp(28px, 7vw, 44px); font-weight: 900; color: var(--accent); line-height: 1; }
+    .strip small { font-size: 10px; letter-spacing: .18em; text-transform: uppercase; color: var(--muted); }
+    @media (max-width: 560px) {
+      .strip { grid-template-columns: repeat(2, 1fr); }
+      .strip div:nth-child(2) { border-right: 0; }
+      .strip div:nth-child(-n+2) { border-bottom: 1px solid #333; }
+    }
+
+    /* Sticky nav */
+    nav.jump {
+      position: sticky; top: 0; z-index: 1000; background: var(--bg);
+      border-bottom: 2px solid var(--line);
+      display: flex; gap: 0; overflow-x: auto; scrollbar-width: none;
+    }
+    nav.jump::-webkit-scrollbar { display: none; }
+    nav.jump a {
+      flex: 0 0 auto; border: 0; padding: 14px 16px; font-size: 11px; font-weight: 700;
+      letter-spacing: .18em; text-transform: uppercase; color: var(--fg); border-right: 1px solid #333;
+    }
+    nav.jump a:hover { background: var(--accent); color: #000; }
+
+    section { padding: 40px 0 8px; }
+    h2.sec {
+      font-size: clamp(28px, 7vw, 56px); font-weight: 900; text-transform: uppercase;
+      letter-spacing: -0.03em; line-height: .95; margin: 0 0 8px;
+    }
+    h2.sec em { font-style: normal; color: var(--accent); }
+    .lede { color: var(--muted); font-size: 14px; line-height: 1.6; margin: 0 0 24px; max-width: 72ch; }
+
+    /* Notice */
+    .notice {
+      border: 2px solid var(--accent); padding: 14px 16px; font-size: 13px; line-height: 1.55; margin: 24px 0 0;
+    }
+    .notice b { color: var(--accent); text-transform: uppercase; letter-spacing: .12em; font-size: 11px; display: block; margin-bottom: 4px; }
+
+    /* Map */
+    #map { height: 62vh; min-height: 340px; max-height: 620px; border: 2px solid var(--line); background: #111; }
+    .leaflet-container { font-family: inherit; }
+    .leaflet-popup-content-wrapper, .leaflet-popup-tip { background: #000; color: #fff; border: 2px solid var(--accent); border-radius: 0; }
+    .leaflet-popup-content { margin: 12px 14px; font-size: 13px; line-height: 1.4; }
+    .leaflet-popup-content b { font-size: 15px; }
+    .leaflet-container a.leaflet-popup-close-button { color: #fff; }
+    .pin {
+      width: 32px; height: 32px; border: 2px solid #000; border-radius: 50%;
+      display: grid; place-items: center; font-size: 11px; font-weight: 900; color: #000;
+      box-shadow: 0 0 0 2px #fff;
+    }
+    .legend { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+    .legend span { font-size: 11px; letter-spacing: .1em; text-transform: uppercase; display: inline-flex; align-items: center; gap: 6px; }
+    .legend i { width: 12px; height: 12px; border-radius: 50%; display: inline-block; border: 1px solid #fff; }
+
+    /* Clusters */
+    .clusters { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
+    .cluster { border: 2px solid var(--line); padding: 16px; background: var(--card-bg); position: relative; }
+    .cluster::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 8px; background: var(--c); }
+    .cluster h3 { margin: 0 0 4px 8px; font-size: 20px; font-weight: 900; text-transform: uppercase; letter-spacing: -0.01em; }
+    .cluster .meta { margin: 0 0 10px 8px; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+    .cluster ul { margin: 0 0 0 8px; padding: 0; list-style: none; font-size: 14px; }
+    .cluster li { padding: 6px 0; border-top: 1px solid #222; display: flex; justify-content: space-between; gap: 8px; }
+    .cluster li span:last-child { color: var(--accent); font-weight: 700; white-space: nowrap; }
+    .cluster .walk { margin: 10px 0 0 8px; font-size: 12px; color: var(--muted); line-height: 1.5; }
+
+    /* Filters */
+    .filters { display: grid; gap: 12px; margin-bottom: 24px; }
+    .chips { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; }
+    .chips::-webkit-scrollbar { display: none; }
+    .chip {
+      flex: 0 0 auto; background: transparent; color: var(--fg); border: 2px solid var(--line);
+      padding: 9px 12px; font: 700 11px/1 inherit; font-family: inherit; letter-spacing: .14em; text-transform: uppercase; cursor: pointer;
+      min-height: 40px;
+    }
+    .chip[aria-pressed="true"] { background: var(--accent); color: #000; border-color: var(--accent); }
+    .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+    select {
+      background: #000; color: #fff; border: 2px solid var(--line); padding: 9px 10px; font: inherit; font-size: 13px; min-height: 40px; border-radius: 0;
+    }
+    .count { font-size: 11px; letter-spacing: .18em; text-transform: uppercase; color: var(--muted); }
+
+    /* Cards */
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; }
+    @media (max-width: 400px) { .grid { grid-template-columns: 1fr; } }
+    .card { border: 2px solid var(--line); background: var(--card-bg); display: flex; flex-direction: column; }
+    .card__top { padding: 16px; border-bottom: 1px solid #333; display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: start; }
+    .kicker { font-size: 10px; letter-spacing: .2em; text-transform: uppercase; color: var(--accent); margin: 0 0 6px; }
+    .card h3 { margin: 0; font-size: 22px; font-weight: 900; line-height: 1.05; letter-spacing: -0.01em; }
+    .where { font-size: 12px; color: var(--muted); margin: 6px 0 0; line-height: 1.4; }
+    .score { text-align: right; }
+    .score b { display: block; font-size: 34px; font-weight: 900; line-height: 1; color: var(--accent); }
+    .stars { font-size: 12px; letter-spacing: 1px; color: var(--accent); white-space: nowrap; }
+    .score small { display: block; font-size: 9px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); margin-top: 4px; }
+    .card__body { padding: 14px 16px 16px; display: grid; gap: 12px; font-size: 14px; line-height: 1.5; flex: 1; }
+    .tags { display: flex; flex-wrap: wrap; gap: 6px; }
+    .tag { font-size: 10px; letter-spacing: .14em; text-transform: uppercase; border: 1px solid #fff; padding: 3px 7px; }
+    .tag--a { border-color: var(--accent); color: var(--accent); }
+    .tag--w { border-color: var(--warn); color: var(--warn); }
+    .tag--ok { border-color: var(--ok); color: var(--ok); }
+    .open { font-size: 11px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; }
+    .open--y { color: var(--ok); }
+    .open--n { color: var(--warn); }
+    .open--u { color: var(--muted); }
+    .hours { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .hours td { padding: 3px 0; border-top: 1px solid #222; }
+    .hours td:last-child { text-align: right; font-variant-numeric: tabular-nums; }
+    .hours tr.today td { color: var(--accent); font-weight: 700; }
+    .note { font-size: 12px; color: var(--muted); }
+    .tour { border-left: 4px solid var(--accent); padding: 6px 10px; font-size: 13px; background: #141000; }
+    .actions { display: flex; gap: 8px; flex-wrap: wrap; padding: 0 16px 16px; }
+    .btn {
+      border: 2px solid var(--line); padding: 10px 12px; font-size: 11px; font-weight: 700;
+      letter-spacing: .14em; text-transform: uppercase; color: #fff; min-height: 40px; display: inline-flex; align-items: center;
+    }
+    .btn--a { border-color: var(--accent); background: var(--accent); color: #000; }
+    .btn:hover { background: #fff; color: #000; }
+    details.src summary { cursor: pointer; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+    details.src ul { margin: 6px 0 0; padding-left: 18px; font-size: 12px; word-break: break-word; }
+
+    /* Tours table */
+    .tours { display: grid; gap: 12px; }
+    .trow { border: 2px solid var(--line); padding: 14px 16px; display: grid; grid-template-columns: 120px 1fr; gap: 12px; background: var(--card-bg); }
+    .trow .verdict { font-size: 11px; font-weight: 900; letter-spacing: .14em; text-transform: uppercase; }
+    .trow h4 { margin: 0 0 4px; font-size: 17px; }
+    .trow p { margin: 0; font-size: 13px; line-height: 1.55; color: #ddd; }
+    @media (max-width: 520px) { .trow { grid-template-columns: 1fr; gap: 6px; } }
+
+    .radar { columns: 2 260px; column-gap: 24px; padding: 0; margin: 0; list-style: none; }
+    .radar li { break-inside: avoid; border-top: 1px solid #333; padding: 10px 0; font-size: 14px; line-height: 1.45; }
+    .radar b { display: block; }
+    .radar span { color: var(--muted); font-size: 12px; }
+
+    .method { font-size: 13px; line-height: 1.6; color: #ccc; max-width: 80ch; }
+    .method code { color: var(--accent); }
+    footer { border-top: 4px solid var(--line); margin-top: 48px; padding: 24px 0 48px; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+  </style>
+</head>
+<body>
+  <header class="masthead">
+    <div class="wrap">
+      <a class="back" href="index.html">← BIERBUCH</a>
+      <h1 class="logo">Librerías de<span>Guadalajara</span></h1>
+      <p class="tagline">Nuevos · cadenas · independientes · de viejo · usados<br />Guadalajara · Zapopan · Chapala · Ajijic</p>
+    </div>
+    <div class="bar" aria-hidden="true"></div>
+  </header>
+
+  <div class="strip wrap" id="strip" style="padding:0"></div>
+
+  <nav class="jump" aria-label="Secciones">
+    <a href="#mapa">Mapa</a>
+    <a href="#zonas">Zonas</a>
+    <a href="#lugares">Lugares</a>
+    <a href="#tours">Vender &amp; ferias</a>
+    <a href="#radar">En el radar</a>
+    <a href="#metodo">Método</a>
+  </nav>
+
+  <main class="wrap">
+    <div class="notice">
+      <b>Antes de ir</b>
+      Datos reunidos en octubre de 2026 a partir de prensa, directorios oficiales (Sistema de Información Cultural, sitios de cada librería) y guías (enlazados en cada ficha). Las librerías de viejo suelen tener horarios irregulares y varias fuentes se contradicen: cuando hay discrepancia se indica. Confirma antes de ir, sobre todo si vas a vender libros.
+    </div>
+
+    <section id="mapa">
+      <h2 class="sec">Mapa &amp; <em>clusters</em></h2>
+      <p class="lede">Cada punto se colorea según el cluster de ubicación al que pertenece (agrupación automática por distancia: lugares a menos de ~750 m entre sí forman una misma zona caminable). Las coordenadas son aproximadas; usa el botón “Cómo llegar” de cada ficha para la dirección exacta.</p>
+      <div id="map" role="region" aria-label="Mapa de librerías"></div>
+      <div class="legend" id="legend"></div>
+    </section>
+
+    <section id="zonas">
+      <h2 class="sec">Zonas por <em>colonia</em></h2>
+      <p class="lede">Clusters detectados y la colonia o zona dominante de cada uno, con su mejor calificado y una sugerencia de ruta.</p>
+      <div class="clusters" id="clusters"></div>
+    </section>
+
+    <section id="lugares">
+      <h2 class="sec">Todos los <em>lugares</em></h2>
+      <p class="lede">Filtra por tipo o por zona. “Abierto ahora” se calcula con la hora de Guadalajara y el horario publicado (cuando existe).</p>
+      <div class="filters">
+        <div class="chips" id="typeChips" role="group" aria-label="Tipo"></div>
+        <div class="row">
+          <select id="zoneSel" aria-label="Zona"></select>
+          <select id="sortSel" aria-label="Ordenar">
+            <option value="rating">Ordenar: rating</option>
+            <option value="name">Ordenar: nombre</option>
+            <option value="zone">Ordenar: zona</option>
+            <option value="open">Ordenar: abierto ahora</option>
+          </select>
+          <button class="chip" id="tourOnly" aria-pressed="false">Compran usados</button>
+          <span class="count" id="count"></span>
+        </div>
+      </div>
+      <div class="grid" id="cards"></div>
+    </section>
+
+    <section id="tours">
+      <h2 class="sec">Vender libros &amp; <em>ferias</em></h2>
+      <p class="lede">Dónde compran o intercambian libros usados, y las ferias y tianguis que vale la pena marcar en el calendario.</p>
+      <div class="tours" id="toursList"></div>
+    </section>
+
+    <section id="radar">
+      <h2 class="sec">En el <em>radar</em></h2>
+      <p class="lede">Nombres que aparecen en guías y listados, pero de los que no pudimos confirmar dirección, horario o que sigan abiertos. No están en el mapa.</p>
+      <ul class="radar" id="radarList"></ul>
+    </section>
+
+    <section id="metodo">
+      <h2 class="sec">Método</h2>
+      <div class="method">
+        <p><b>Rating BIERBUCH (1–5):</b> calificación editorial que pondera fondo y curaduría (tamaño, rareza, especialidad), reputación en guías y prensa, experiencia (espacio, café, actividades) y certeza de los datos. No es un promedio de Google ni de Tripadvisor. Cuando una fuente publica una calificación de usuarios, aparece aparte como “ref.”.</p>
+        <p><b>Clusters:</b> se calculan en el navegador con un DBSCAN sencillo sobre distancia haversine (<code>eps = 750 m</code>, <code>mínimo 2 lugares</code>). Los lugares sin vecinos cercanos se agrupan con los de su misma zona; si quedan solos, son “destino propio”. El nombre de cada cluster es la zona más frecuente entre sus miembros.</p>
+        <p><b>Horarios:</b> tomados de la fuente más reciente encontrada. Si dos fuentes difieren, se muestra la más reciente y se marca “fuentes discrepan”.</p>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap">BIERBUCH · Guía de librerías GDL · actualizada oct 2026 · <a href="guadalajara.html">Guía de cerveza →</a></div>
+  </footer>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+  <script>
+    // Horario semanal: índice 0 = domingo … 6 = sábado. null = cerrado, "?" = sin dato ese día.
+    // tour: si = compran libros usados, parcial = intercambio, evento = feria o mercado.
+    const PLACES = [
+      {
+        id: "fce", name: "Librería José Luis Martínez (FCE)", kind: "Librería del Fondo de Cultura Económica", types: ["nuevos", "cafe"],
+        zone: "Chapultepec", colonia: "Americana", municipio: "Guadalajara",
+        address: "Av. Chapultepec Sur 198, Col. Americana, Guadalajara", lat: 20.6718, lng: -103.3692,
+        rating: 4.7,
+        blurb: "La casa del Fondo de Cultura Económica en Guadalajara: catálogo extenso y poco convencional del FCE y otras editoriales, auditorio con presentaciones y el café Gufo adentro.",
+        hours: [["09:30", "16:00"], ["09:00", "21:00"], ["09:00", "21:00"], ["09:00", "21:00"], ["09:00", "21:00"], ["09:00", "21:00"], ["09:00", "21:00"]],
+        hoursNote: "Directorio oficial del FCE y Secretaría de Cultura.",
+        tour: { has: "no" },
+        phone: "+52 33 3615 1214",
+        tags: ["FCE", "Auditorio", "Café Gufo"],
+        sources: ["https://www.fondodeculturaeconomica.com/LibreriasEstado/14", "https://sic.cultura.gob.mx/ficha.php?table=libreria&table_id=1047", "https://matadornetwork.com/es/mejores-librerias-de-guadalajara/"]
+      },
+      {
+        id: "gonvillchapu", name: "Gonvill Chapultepec", kind: "Cadena tapatía", types: ["nuevos", "cadena"],
+        zone: "Chapultepec", colonia: "Americana", municipio: "Guadalajara",
+        address: "Av. Chapultepec Sur 150 (esq. López Cotilla), Guadalajara", lat: 20.6729, lng: -103.3692,
+        rating: 4.0,
+        blurb: "Sucursal de Gonvill, la cadena librera tapatía, a una cuadra del FCE. Novedades, texto y papelería.",
+        hours: [["10:00", "16:00"], ["10:00", "20:30"], ["10:00", "20:30"], ["10:00", "20:30"], ["10:00", "20:30"], ["10:00", "20:30"], ["10:00", "20:30"]],
+        hoursNote: "Catálogo de sucursales de Gonvill; Yelp marca 10:00–19:00 diario.",
+        tour: { has: "no" },
+        tags: ["Cadena local", "Novedades"],
+        sources: ["https://www.gonvill.com.mx/especial/Sucursales", "https://www.yelp.com/biz/librer%C3%ADas-gonvill-guadalajara-8"]
+      },
+      {
+        id: "gandhilafayette", name: "Gandhi Lafayette", kind: "Cadena nacional", types: ["nuevos", "cadena"],
+        zone: "Chapultepec", colonia: "Lafayette", municipio: "Guadalajara",
+        address: "López Cotilla 1567, Lafayette, Guadalajara", lat: 20.6740, lng: -103.3713,
+        rating: 4.1,
+        blurb: "La Gandhi más céntrica, a pasos de Av. Chapultepec: novedades, saldos y música.",
+        hours: [["11:00", "20:00"], ["10:00", "21:00"], ["10:00", "21:00"], ["10:00", "21:00"], ["10:00", "21:00"], ["10:00", "21:00"], ["10:00", "21:00"]],
+        hoursNote: "Yelp. Otras fuentes dan 10:00–20:00 diario.",
+        tour: { has: "no" },
+        phone: "+52 33 5004 2846",
+        tags: ["Novedades", "Saldos"],
+        sources: ["https://www.gandhi.com.mx/store/centro-tel-3350042846-jalisco-44140/17", "https://www.yelp.com/biz/librer%C3%ADas-gandhi-guadalajara"]
+      },
+      {
+        id: "laperla", name: "La Perla Records & Books", kind: "Usados en inglés + vinilos", types: ["usados", "ingles", "independiente"],
+        zone: "Chapultepec", colonia: "Americana", municipio: "Guadalajara",
+        address: "Pedro Moreno 1530 (planta alta), Col. Americana, Guadalajara", lat: 20.6756, lng: -103.3700,
+        rating: 4.5,
+        blurb: "Segundo piso con libros usados, sobre todo en inglés, y discos de vinil; a veces hay libros gratis. Toca el timbre para entrar.",
+        hours: [null, ["11:00", "21:00"], ["11:00", "21:00"], ["11:00", "21:00"], ["11:00", "21:00"], ["11:00", "21:00"], ["11:00", "21:00"]],
+        hoursNote: "Fuentes antiguas y Yelp coinciden.",
+        tour: { has: "parcial", text: "Compra e intercambio de libros: preguntar en tienda." },
+        phone: "+52 33 1525 3015",
+        tags: ["Inglés", "Vinilos", "Timbre"],
+        sources: ["https://mexiconewsdaily.com/mexico-living/la-perla-records-books-in-guadalajara/", "https://theguadalajarareporter.net/index.php/columns/columns/john-pint/51673-looking-for-good-used-books-in-english-check-out-la-perla", "https://www.yelp.com/biz/la-perla-records-y-books-guadalajara"]
+      },
+      {
+        id: "martinta", name: "Mar de Tinta", kind: "Literatura y novela gráfica", types: ["nuevos", "independiente", "comic"],
+        zone: "Chapultepec", colonia: "Lafayette / Americana", municipio: "Guadalajara",
+        address: "Simón Bolívar 49 (entre Pedro Moreno y Morelos), Guadalajara", lat: 20.6760, lng: -103.3758,
+        rating: 4.4,
+        blurb: "Librería pequeña e independiente especializada en literatura, cómic y novela gráfica, con catálogo curado.",
+        hours: null,
+        tour: { has: "no" },
+        phone: "+52 33 3149 5686",
+        tags: ["Cómic", "Novela gráfica"],
+        sources: ["https://sic.cultura.gob.mx/ficha.php?table=libreria&table_id=2468", "https://www.informador.mx/cultura/Sumergete-en-un-mar-de-libros-20190211-0010.html", "https://www.cronica.com.mx/jalisco/2025/04/23/las-librerias-mas-bonitas-de-guadalajara-que-debes-conocer/"]
+      },
+      {
+        id: "tianguischapu", name: "Tianguis de Chapultepec", kind: "Mercado de libros en el camellón", types: ["usados", "antiguos", "feria"],
+        zone: "Chapultepec", colonia: "Americana", municipio: "Guadalajara",
+        address: "Camellón de Av. Chapultepec, Col. Americana, Guadalajara", lat: 20.6740, lng: -103.3694,
+        rating: 4.2,
+        blurb: "Los sábados por la tarde el camellón se llena de puestos con libros usados y antiguos, ediciones raras y best-sellers rebajados.",
+        hours: [null, null, null, null, null, null, "?"],
+        hoursNote: "Sábado por la tarde; sin horario publicado.",
+        tour: { has: "evento", text: "Sábados por la tarde en el camellón de Chapultepec." },
+        tags: ["Sábado", "Al aire libre", "Regateo"],
+        sources: ["https://matadornetwork.com/es/mejores-librerias-de-guadalajara/", "https://zonaguadalajara.com/los-7-mejores-tianguis-de-guadalajara/"]
+      },
+      {
+        id: "andanzas", name: "Librero en Andanzas", kind: "Librería de viejo", types: ["usados", "antiguos", "independiente"],
+        zone: "Americana oriente", colonia: "Americana", municipio: "Guadalajara",
+        address: "López Cotilla 805 (esq. Rayón), Col. Americana, Guadalajara", lat: 20.6742, lng: -103.3584,
+        rating: 4.6,
+        blurb: "Libros usados, raros, de colección y ediciones especiales, a unas cuadras del MUSA y el Parque Rojo. Organiza el Tianguis de Andanzas en San Fernando y semanas de descuento.",
+        hours: [null, ["11:00", "19:00"], ["11:00", "19:00"], ["11:00", "19:00"], ["11:00", "19:00"], ["11:00", "19:00"], ["11:00", "17:00"]],
+        hoursNote: "Sitio oficial. Algunas publicaciones dan el sábado hasta las 15:00 o 18:00.",
+        tour: { has: "si", text: "Compran libros y bibliotecas completas: valoración y pago inmediato en tienda." },
+        phone: "+52 33 3857 6747",
+        tags: ["Raros", "Colección", "Compra bibliotecas"],
+        sources: ["https://libreroenandanzas.com/pages/librero-en-andanzas-guadalajara-libros-usados-antiguos-y-ediciones-especiales", "https://libreroenandanzas.com/pages/compro-libros-y-bibliotecas-librero-andanzas"]
+      },
+      {
+        id: "desvan", name: "El Desván de Don Quijote", kind: "Librería de usado y antiguo", types: ["usados", "antiguos", "ingles"],
+        zone: "Americana oriente", colonia: "Americana", municipio: "Guadalajara",
+        address: "López Cotilla 813, Col. Americana, Guadalajara", lat: 20.6742, lng: -103.3589,
+        rating: 4.3,
+        blurb: "Local grande con pilas de usados, muchos de bolsillo en inglés. El dueño suele comprar o cambiar libros. Junto a Librero en Andanzas.",
+        hours: [null, ["10:00", "20:00"], ["10:00", "20:00"], ["10:00", "20:00"], ["10:00", "20:00"], ["10:00", "20:00"], ["10:00", "20:00"]],
+        hoursNote: "Lonely Planet; Cylex da apertura a las 8:00 entre semana.",
+        tour: { has: "si", text: "Compra o intercambio de libros, según disponibilidad del dueño." },
+        phone: "+52 33 3827 3408",
+        tags: ["Inglés", "Bolsillo", "Intercambio"],
+        sources: ["https://sic.gob.mx/ficha.php?table=libreria&table_id=2186", "https://www.lonelyplanet.com/mexico/western-central-highlands/guadalajara/shopping/el-desvan-de-don-quijote/a/poi-sho/1147519/361671"]
+      },
+      {
+        id: "ahuehuete", name: "Libros Ahuehuete", kind: "Nuevos y usados", types: ["nuevos", "usados", "independiente"],
+        zone: "Americana oriente", colonia: "Americana", municipio: "Guadalajara",
+        address: "Prisciliano Sánchez 737, Col. Americana, Guadalajara", lat: 20.6714, lng: -103.3572,
+        rating: 4.3,
+        blurb: "En una calle tranquila, libros nuevos y usados en los mismos estantes, con buena sección de historia de Guadalajara y Jalisco.",
+        hours: [null, ["11:00", "19:00"], ["11:00", "19:00"], ["11:00", "19:00"], ["11:00", "19:00"], ["11:00", "19:00"], ["11:00", "16:00"]],
+        hoursNote: "Notas de prensa de hace ~2 años.",
+        tour: { has: "no" },
+        tags: ["Historia de Jalisco", "Nuevo + usado"],
+        sources: ["https://www.informador.mx/cultura/librerias-alternativas-en-guadalajara-para-leer-de-manera-distinta-20260224-0095.html", "https://www.milenio.com/cultura/librerias-en-guadalajara-donde-comprar-en-la-colonia-americana"]
+      },
+      {
+        id: "impronta", name: "Impronta Casa Editora", kind: "Editorial, imprenta y librería", types: ["nuevos", "independiente", "cafe"],
+        zone: "Americana oriente", colonia: "Americana (límite con Mexicaltzingo)", municipio: "Guadalajara",
+        address: "Penitenciaría 414, Col. Americana, Guadalajara", lat: 20.6707, lng: -103.3557,
+        rating: 4.6,
+        blurb: "Casona antigua con editorial e imprenta tipográfica, librería de sellos independientes, exposiciones, talleres de tipografía y el Café Diamante.",
+        hours: [null, ["09:00", "17:00"], ["09:00", "17:00"], ["09:00", "21:00"], ["09:00", "21:00"], ["09:00", "21:00"], ["10:00", "21:00"]],
+        hoursNote: "Sitio oficial.",
+        tour: { has: "no" },
+        phone: "+52 33 3825 2641",
+        tags: ["Tipografía", "Café Diamante", "Exposiciones"],
+        sources: ["https://www.improntacasaeditora.com/", "https://www.cronica.com.mx/jalisco/2025/04/23/las-librerias-mas-bonitas-de-guadalajara-que-debes-conocer/", "https://foodandpleasure.com/librerias-en-guadalajara/"]
+      },
+      {
+        id: "sancho", name: "Sancho Libros", kind: "Librería independiente", types: ["nuevos", "independiente"],
+        zone: "Americana oriente", colonia: "Americana", municipio: "Guadalajara",
+        address: "Rayón 333, Col. Americana, Guadalajara", lat: 20.6758, lng: -103.3584,
+        rating: 4.0,
+        blurb: "Librería participante de la Feria Municipal del Libro de Guadalajara 2026.",
+        hours: null,
+        tour: { has: "no" },
+        phone: "+52 33 1321 5181",
+        tags: ["Independiente"],
+        sources: ["https://feriamunicipaldellibrogdl.com.mx/librerias-participantes/"]
+      },
+      {
+        id: "itaca", name: "Librería Ítaca", kind: "Librería de viejo", types: ["usados", "antiguos"],
+        zone: "Centro", colonia: "Centro", municipio: "Guadalajara",
+        address: "López Cotilla 545, Centro, Guadalajara", lat: 20.6741, lng: -103.3536,
+        rating: 4.4,
+        blurb: "Compra y venta de usados, agotados, primeras ediciones y libros antiguos; destaca por ejemplares firmados y difíciles de encontrar.",
+        hours: [["10:00", "19:00"], ["10:00", "19:00"], ["10:00", "19:00"], ["10:00", "19:00"], ["10:00", "19:00"], ["10:00", "19:00"], ["10:00", "19:00"]],
+        hoursNote: "Directorio; confirmar.",
+        tour: { has: "si", text: "Compra de libros usados, agotados y antiguos." },
+        phone: "+52 33 1613 4876",
+        tags: ["Primeras ediciones", "Firmados"],
+        sources: ["https://www.facebook.com/libreriaitaca/", "https://www.informador.mx/cultura/Las-librerias-entre-lo-fisico-y-lo-virtual-20210814-0020.html"]
+      },
+      {
+        id: "premionobel", name: "Librería El Premio Nobel", kind: "Librería de viejo", types: ["usados"],
+        zone: "Centro", colonia: "Centro", municipio: "Guadalajara",
+        address: "López Cotilla 565-A, Centro, Guadalajara", lat: 20.6741, lng: -103.3540,
+        rating: 3.7,
+        blurb: "Librería de usados en el tramo librero de López Cotilla, junto a Ítaca.",
+        hours: null,
+        tour: { has: "no" },
+        status: "verificar",
+        tags: ["Usados"],
+        sources: ["https://libroantiguomania.blogspot.com/2010/10/librerias-de-libros-usados-en.html"]
+      },
+      {
+        id: "libguadalajara", name: "Librería Guadalajara", kind: "Nuevos, usados y antiguos", types: ["nuevos", "usados", "antiguos"],
+        zone: "Centro", colonia: "Centro", municipio: "Guadalajara",
+        address: "José María Morelos 589, Centro, Guadalajara", lat: 20.6762, lng: -103.3533,
+        rating: 4.2,
+        blurb: "Una de las librerías que resisten en el Centro: colección extensa, material didáctico y ediciones antiguas y usadas.",
+        hours: [["11:00", "15:00"], ["10:00", "20:00"], ["10:00", "20:00"], ["10:00", "20:00"], ["10:00", "20:00"], ["10:00", "20:00"], ["10:00", "20:00"]],
+        hoursNote: "Secretaría de Cultura; otro directorio da 9:00–19:30 diario.",
+        tour: { has: "no" },
+        phone: "+52 33 3614 7364",
+        tags: ["Centro Histórico", "Antiguos"],
+        sources: ["https://www.informador.mx/jalisco/Conocelas-Las-mejores-librerias-del-Centro-Historico-20250714-0129.html", "https://sic.cultura.gob.mx/ficha.php?table=libreria&table_id=1749"]
+      },
+      {
+        id: "gonvillcentro", name: "Gonvill Centro", kind: "Cadena tapatía", types: ["nuevos", "cadena"],
+        zone: "Centro", colonia: "Centro", municipio: "Guadalajara",
+        address: "Av. 16 de Septiembre 118, Centro, Guadalajara", lat: 20.6748, lng: -103.3479,
+        rating: 3.9,
+        blurb: "Gonvill tiene varias sucursales en el Centro (16 de Septiembre, Morelos 530, Independencia 352, López Cotilla 501): texto escolar, novedades y papelería.",
+        hours: [["10:00", "19:00"], ["09:00", "20:30"], ["09:00", "20:30"], ["09:00", "20:30"], ["09:00", "20:30"], ["09:00", "20:30"], ["09:00", "20:30"]],
+        hoursNote: "Waze y catálogo de sucursales.",
+        tour: { has: "no" },
+        phone: "+52 33 3614 2856",
+        tags: ["Cadena local", "Texto"],
+        sources: ["https://www.gonvill.com.mx/especial/Sucursales", "https://sic.cultura.gob.mx/ficha.php?table=libreria&table_id=1750"]
+      },
+      {
+        id: "porrua", name: "Librería Porrúa Centro", kind: "Cadena nacional", types: ["nuevos", "cadena"],
+        zone: "Centro", colonia: "Centro", municipio: "Guadalajara",
+        address: "Prisciliano Sánchez 460, Centro, Guadalajara", lat: 20.6727, lng: -103.3516,
+        rating: 3.8,
+        blurb: "Porrúa en el Centro, fuerte en derecho y texto universitario. Otras tiendas: Av. de los Maestros 1060 y un outlet en la carretera a Morelia.",
+        hours: null,
+        tour: { has: "no" },
+        tags: ["Derecho", "Texto"],
+        sources: ["https://porrua.mx/sucursales/", "https://porrua.mx/sucursales/sucursal-Prisciliano-Sanchez/"]
+      },
+      {
+        id: "callejon", name: "Callejón del Libro", kind: "Mercado de libro usado", types: ["usados", "antiguos", "feria"],
+        zone: "Centro", colonia: "Centro (Ex Convento del Carmen)", municipio: "Guadalajara",
+        address: "Ex Convento del Carmen, Av. Juárez 638, Centro, Guadalajara", lat: 20.6748, lng: -103.3560,
+        rating: 4.1,
+        blurb: "Los viernes por la tarde, libreros de la Asociación de Libreros de Guadalajara venden usados y antiguos (hasta 50 % menos que nuevos) e intercambian libros.",
+        hours: [null, null, null, null, null, ["17:00", "22:00"], null],
+        hoursNote: "Listados antiguos; confirmar que sigue.",
+        tour: { has: "evento", text: "Viernes 17:00–22:00: venta, intercambio y donación de libros." },
+        status: "verificar",
+        tags: ["Viernes", "Intercambio"],
+        sources: ["https://www.mexicoescultura.com/actividad/122240/callejon-del-libro.html", "https://blog.seccionamarilla.com.mx/paseo-por-el-callejon-del-libro-en-guadalajara/"]
+      },
+      {
+        id: "hamlet", name: "Librería Café Hamlet", kind: "Usados + café", types: ["usados", "cafe", "independiente"],
+        zone: "Centro norte", colonia: "Centro / Alcalde Barranquitas", municipio: "Guadalajara",
+        address: "Fray Antonio Alcalde 600-A (planta alta), Guadalajara", lat: 20.6853, lng: -103.3474,
+        rating: 4.4,
+        blurb: "Segundo piso con aire de casa antigua: libros usados de todos los géneros en cada rincón, para comprar o leer con café. Cerca de la estación Santuario de la Línea 3.",
+        hours: [null, ["12:00", "21:30"], ["12:00", "21:30"], ["12:00", "21:30"], ["12:00", "21:30"], ["12:00", "21:30"], ["12:00", "21:30"]],
+        hoursNote: "Redes sociales y directorio.",
+        tour: { has: "si", text: "Compran libros usados." },
+        phone: "+52 33 1913 3258", ig: "libreria_cafe_hamlet",
+        tags: ["Café", "Línea 3"],
+        sources: ["https://www.informador.mx/cultura/librerias-alternativas-en-guadalajara-para-leer-de-manera-distinta-20260224-0095.html", "https://www.facebook.com/p/Librer%C3%ADa-Caf%C3%A9-Hamlet-61554358546381/"]
+      },
+      {
+        id: "tianguiscultural", name: "Tianguis Cultural", kind: "Tianguis de los sábados", types: ["usados", "feria"],
+        zone: "Agua Azul", colonia: "Plaza Juárez (junto al Parque Agua Azul)", municipio: "Guadalajara",
+        address: "Plaza Juárez, Guadalajara", lat: 20.6650, lng: -103.3505,
+        rating: 4.0,
+        blurb: "Más de 900 sábados y 30 años: el núcleo sigue siendo la venta de libros usados, vinilos, arte e instrumentos, con música en vivo.",
+        hours: [null, null, null, null, null, null, ["10:00", "19:00"]],
+        hoursNote: "Horario aproximado de una guía de viaje.",
+        tour: { has: "evento", text: "Todos los sábados, entrada libre." },
+        tags: ["Sábado", "Vinilos", "Contracultura"],
+        sources: ["https://www.jornada.com.mx/2026/01/02/cultura/a03n1cul", "https://tianguiscultural.org/qui%C3%A9nes-somos", "https://www.nomadotravel.app/en/attractions/tianguis-cultural-guadalajara"]
+      },
+      {
+        id: "carlosfuentes", name: "Librería Carlos Fuentes", kind: "Librería universitaria (UdeG)", types: ["nuevos", "universitaria", "cafe"],
+        zone: "Belenes / CUCEA", colonia: "Parque Industrial Belenes Norte", municipio: "Zapopan",
+        address: "Periférico Norte 1695, planta baja de la Biblioteca Juan José Arreola, Zapopan", lat: 20.7402, lng: -103.3810,
+        rating: 4.8,
+        blurb: "La librería grande de la Universidad de Guadalajara: unos 2,600 m², debajo de la Biblioteca Pública del Estado y frente al CUCEA. Fuerte programa de presentaciones y talleres.",
+        hours: [["10:00", "17:00"], ["09:00", "20:00"], ["09:00", "20:00"], ["09:00", "20:00"], ["09:00", "20:00"], ["09:00", "20:00"], ["09:00", "20:00"]],
+        hoursNote: "Sitio oficial y Secretaría de Cultura coinciden.",
+        tour: { has: "no" },
+        tags: ["2,600 m²", "UdeG", "Actividades"],
+        sources: ["https://www.libreriacarlosfuentes.mx/es/como-llegar", "https://sic.cultura.gob.mx/ficha.php?table=libreria&table_id=2466", "https://www.cronica.com.mx/jalisco/2025/04/23/las-librerias-mas-bonitas-de-guadalajara-que-debes-conocer/"]
+      },
+      {
+        id: "gandhiphierro", name: "Gandhi Puerta de Hierro", kind: "Cadena nacional", types: ["nuevos", "cadena"],
+        zone: "Andares / Puerta de Hierro", colonia: "Santa Isabel (Plaza Andares)", municipio: "Zapopan",
+        address: "Av. de la Patria 2052, Santa Isabel, Zapopan", lat: 20.7092, lng: -103.4118,
+        rating: 4.0,
+        blurb: "Gandhi de la zona Andares / Puerta de Hierro, abierta todos los días.",
+        hours: [["10:00", "21:00"], ["10:00", "21:00"], ["10:00", "21:00"], ["10:00", "21:00"], ["10:00", "21:00"], ["10:00", "21:00"], ["10:00", "21:00"]],
+        hoursNote: "Sitio de Gandhi.",
+        tour: { has: "no" },
+        phone: "+52 33 3611 4181",
+        tags: ["Novedades"],
+        sources: ["https://www.gandhi.com.mx/store/puerta-de-hierro-tel-3336114181-jalisco-45110/18"]
+      },
+      {
+        id: "sotano", name: "El Sótano Guadalajara", kind: "Cadena nacional", types: ["nuevos", "cadena"],
+        zone: "Chapalita / Av. Guadalupe", colonia: "Jardines San Ignacio", municipio: "Zapopan",
+        address: "Av. Guadalupe 1294, Jardines San Ignacio, Zapopan", lat: 20.6668, lng: -103.3893,
+        rating: 3.9,
+        blurb: "Única sucursal de El Sótano en el área metropolitana.",
+        hours: [["10:00", "21:00"], ["09:00", "21:00"], ["09:00", "21:00"], ["09:00", "21:00"], ["09:00", "21:00"], ["09:00", "21:00"], ["09:00", "21:00"]],
+        hoursNote: "Sitio de El Sótano.",
+        tour: { has: "no" },
+        tags: ["Novedades"],
+        sources: ["https://www.elsotano.com/tiendas-sucursal-sotano-guadalajara-9"]
+      },
+      {
+        id: "gonvillsol", name: "Gonvill Plaza del Sol", kind: "Cadena tapatía", types: ["nuevos", "cadena"],
+        zone: "Plaza del Sol", colonia: "Plaza del Sol", municipio: "Zapopan",
+        address: "Plaza del Sol, Av. López Mateos Sur, Zapopan", lat: 20.6497, lng: -103.4015,
+        rating: 3.8,
+        blurb: "Gonvill dentro de Plaza del Sol. Hay más sucursales en Plaza México, La Gran Plaza, Plaza Universidad y la UAG.",
+        hours: [["11:00", "20:00"], ["10:00", "20:30"], ["10:00", "20:30"], ["10:00", "20:30"], ["10:00", "20:30"], ["10:00", "20:30"], ["10:00", "20:30"]],
+        hoursNote: "Catálogo de sucursales (antiguo).",
+        tour: { has: "no" },
+        tags: ["Centro comercial"],
+        sources: ["https://www.gonvill.com.mx/especial/Sucursales"]
+      },
+      {
+        id: "sanbornssol", name: "Sanborns Plaza del Sol", kind: "Tienda departamental con librería", types: ["nuevos", "cadena"],
+        zone: "Plaza del Sol", colonia: "Plaza del Sol", municipio: "Zapopan",
+        address: "Av. Adolfo López Mateos Sur 2718, Zapopan", lat: 20.6502, lng: -103.4021,
+        rating: 3.4,
+        blurb: "Sección de libros de Sanborns: best-sellers y revistas. Hay otras en el Centro, Av. Vallarta, La Gran Plaza y Galerías.",
+        hours: null,
+        tour: { has: "no" },
+        tags: ["Best-sellers", "Revistas"],
+        sources: ["https://sic.cultura.gob.mx/ficha.php?table=libreria&table_id=1213", "https://menu.sanborns.com.mx/sucursales"]
+      },
+      {
+        id: "sanbornsgalerias", name: "Sanborns Galerías", kind: "Tienda departamental con librería", types: ["nuevos", "cadena"],
+        zone: "Galerías / Vallarta", colonia: "La Estancia (Plaza Galerías)", municipio: "Zapopan",
+        address: "Av. Rafael Sanzio 150-C, Zapopan", lat: 20.6792, lng: -103.4372,
+        rating: 3.3,
+        blurb: "Sanborns de Plaza Galerías con sección de libros y revistas.",
+        hours: null,
+        tour: { has: "no" },
+        tags: ["Best-sellers", "Centro comercial"],
+        sources: ["https://www.sucursales24.com.mx/guadalajara/sanborns/"]
+      },
+      {
+        id: "carlosfuenteschapala", name: "Librería Carlos Fuentes Chapala", kind: "Librería universitaria (UdeG)", types: ["nuevos", "universitaria"],
+        zone: "Chapala", colonia: "Lourdes (Hotel Villa Montecarlo)", municipio: "Chapala",
+        address: "Hidalgo 296, Col. Lourdes, Chapala, Jalisco", lat: 20.2938, lng: -103.1985,
+        rating: 4.4,
+        blurb: "Sede de la Librería Carlos Fuentes dentro del Hotel Villa Montecarlo de la UdeG, con más de 4 mil títulos. Cumplió dos años en 2026.",
+        hours: [["08:00", "20:00"], ["08:00", "20:00"], ["08:00", "20:00"], ["08:00", "20:00"], ["08:00", "20:00"], ["08:00", "20:00"], ["08:00", "20:00"]],
+        hoursNote: "Sitio oficial.",
+        tour: { has: "no" },
+        phone: "+52 33 3196 9335",
+        tags: ["Ribera de Chapala", "UdeG"],
+        sources: ["https://www.libreriacarlosfuentes.mx/es/como-llegar", "https://www.udg.mx/es/noticia/inauguran-libreria-carlos-fuentes-en-chapala", "https://www.informador.mx/cultura/libreria-carlos-fuentes-cumple-dos-anos-en-chapala-conoce-el-programa-para-celebrar-gratis-hoy-20260918-0048.html"]
+      },
+      {
+        id: "perritosabio", name: "El Perrito Sabio", kind: "Librería de segunda mano", types: ["usados", "ingles"],
+        zone: "Ajijic", colonia: "Centro de Ajijic", municipio: "Chapala",
+        address: "Colón 37, Ajijic, Jalisco", lat: 20.2997, lng: -103.2643,
+        rating: 4.2,
+        blurb: "Usados en inglés y español frente a la plaza de Ajijic, muy usada por la comunidad extranjera de la Ribera.",
+        hours: null,
+        tour: { has: "no" },
+        tags: ["Inglés", "Pueblo Mágico"],
+        sources: ["https://lakesideguide.mx/es/el-perrito-sabio-bookstore-es/"]
+      },
+      {
+        id: "lcs", name: "Lake Chapala Society · Biblioteca", kind: "Biblioteca en inglés con venta de usados", types: ["usados", "ingles"],
+        zone: "Ajijic", colonia: "Centro de Ajijic", municipio: "Chapala",
+        address: "16 de Septiembre 16-A, Ajijic, Jalisco", lat: 20.2985, lng: -103.2628,
+        rating: 4.1,
+        blurb: "La biblioteca en inglés más grande de México (26–30 mil volúmenes, de préstamo para socios); su tiendita de usados vende libros baratos para financiarla.",
+        hours: null,
+        tour: { has: "parcial", text: "Recibe donaciones de libros para la biblioteca y su venta de usados." },
+        tags: ["Inglés", "Biblioteca", "Donaciones"],
+        sources: ["https://lakechapalasociety.com/public/english.php", "https://themazatlanpost.com/2020/11/09/lake-chapalas-ajijic-community-has-the-largest-english-library-in-mexico/"]
+      }
+    ];
+
+    const TOURS_EXTRA = [
+      { name: "FIL Guadalajara", verdict: "evento", text: "La feria del libro en español más grande del mundo, en Expo Guadalajara, cada año entre finales de noviembre e inicios de diciembre. Confirma fechas en fil.com.mx." },
+      { name: "FLUYA · Feria del Libro Antiguo y Usado", verdict: "evento", text: "Cada noviembre en los portales del Palacio Municipal de Guadalajara (la edición 2024 fue a inicios de noviembre)." },
+      { name: "Feria Municipal del Libro de Guadalajara", verdict: "evento", text: "Reúne a librerías locales e independientes; su directorio de participantes es buena lista de librerías pequeñas." },
+      { name: "Tianguis de Andanzas (San Fernando)", verdict: "evento", text: "Feria de libro usado que organiza Librero en Andanzas en el barrio de San Fernando. Fechas en su sitio." }
+    ];
+
+    const RADAR = [
+      { name: "LOPA · Librería Ojos de Perro Azul", note: "José Guadalupe Zuno 1804, Americana. Su perfil en X dice “cerrado permanentemente”." },
+      { name: "Damiana Café", note: "Café-librería en la colonia Americana; sin dirección confirmada." },
+      { name: "Zuno Café", note: "Zuno 1912, Americana. Café con selección de libros de arte, arquitectura y diseño." },
+      { name: "Librería Sor Juana Inés de la Cruz", note: "Pedro Loza 495, Centro. Usados a buen precio según reseñas; datos antiguos." },
+      { name: "Librería de Viejo (Chapultepec 376)", note: "Dirección según su Facebook; sin confirmar que siga abierta." },
+      { name: "La Estación · Librería Madrigal", note: "8 de Julio 67 y Mezquitán 91 (Centro), de un directorio de libros usados de 2010." },
+      { name: "Hijos del Nopal · Odisea · Librería Esotérica Tao", note: "Participantes de la Feria Municipal del Libro 2026; sin dirección confirmada." },
+      { name: "Bazar Cultural Paseo Alcalde", note: "Venta de libros en el Paseo Alcalde; sin horario publicado." },
+      { name: "Gonvill (otras sucursales)", note: "Morelos 530, Independencia 352, López Cotilla 501, Plaza México, La Gran Plaza, Plaza Universidad y UAG (Av. Patria 1201)." },
+      { name: "Tlaquepaque y Tonalá", note: "No encontramos librerías independientes con datos verificables en sus centros." }
+    ];
+
+    const TYPE_LABELS = {
+      all: "Todos", nuevos: "Nuevos", usados: "Usados / viejo", antiguos: "Antiguos y raros",
+      independiente: "Independiente", cadena: "Cadena", universitaria: "Universitaria",
+      cafe: "Con café", comic: "Cómic", ingles: "En inglés", feria: "Tianguis / mercado"
+    };
+    const DAYS = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
+    const PALETTE = ["#ffb800", "#ff5a3c", "#3ddc84", "#4fa3ff", "#c77dff", "#ff7ac6", "#00e5d4", "#f2f2f2", "#b5e61d", "#ff9f43"];
+
+    function esc(s) {
+      return String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+    }
+
+    // ---------- Clustering (DBSCAN, haversine) ----------
+    function km(a, b) {
+      const R = 6371, rad = Math.PI / 180;
+      const dLat = (b.lat - a.lat) * rad, dLng = (b.lng - a.lng) * rad;
+      const h = Math.sin(dLat / 2) ** 2 + Math.cos(a.lat * rad) * Math.cos(b.lat * rad) * Math.sin(dLng / 2) ** 2;
+      return 2 * R * Math.asin(Math.sqrt(h));
+    }
+
+    function dbscan(points, eps, minPts) {
+      const labels = new Array(points.length).fill(undefined);
+      let c = 0;
+      const neighbors = i => points.map((_, j) => j).filter(j => km(points[i], points[j]) <= eps);
+      for (let i = 0; i < points.length; i++) {
+        if (labels[i] !== undefined) continue;
+        const n = neighbors(i);
+        if (n.length < minPts) { labels[i] = -1; continue; }
+        labels[i] = c;
+        const queue = n.filter(j => j !== i);
+        while (queue.length) {
+          const j = queue.shift();
+          if (labels[j] === -1) labels[j] = c;
+          if (labels[j] !== undefined) continue;
+          labels[j] = c;
+          const nj = neighbors(j);
+          if (nj.length >= minPts) queue.push(...nj);
+        }
+        c++;
+      }
+      return labels;
+    }
+
+    function buildClusters() {
+      const labels = dbscan(PLACES, 0.75, 2);
+      const groups = new Map();
+      PLACES.forEach((p, i) => {
+        // Lugares sin vecinos cercanos se agrupan por zona (p. ej. dos lugares en Ajijic).
+        const key = labels[i] === -1 ? `zona-${p.zone}` : `c${labels[i]}`;
+        if (!groups.has(key)) groups.set(key, []);
+        groups.get(key).push(p);
+      });
+      const clusters = [...groups.entries()].map(([key, members]) => {
+        const freq = {};
+        members.forEach(m => freq[m.zone] = (freq[m.zone] || 0) + 1);
+        const zones = Object.entries(freq).sort((a, b) => b[1] - a[1]).map(([z]) => z);
+        const lat = members.reduce((s, m) => s + m.lat, 0) / members.length;
+        const lng = members.reduce((s, m) => s + m.lng, 0) / members.length;
+        const radius = Math.max(...members.map(m => km({ lat, lng }, m))) * 1000 + 250;
+        const avg = members.reduce((s, m) => s + m.rating, 0) / members.length;
+        const span = members.length > 1 ? Math.max(...members.flatMap(a => members.map(b => km(a, b)))) : 0;
+        return { key, members, solo: members.length === 1, name: members.length > 1 ? zones.slice(0, 2).join(" + ") : members[0].zone, lat, lng, radius, avg, span };
+      });
+      clusters.sort((a, b) => b.members.length - a.members.length || b.avg - a.avg);
+      clusters.forEach((c, i) => {
+        c.color = PALETTE[i % PALETTE.length];
+        c.members.forEach(m => { m.cluster = c; });
+      });
+      return clusters;
+    }
+
+    // ---------- Hours ----------
+    function gdlNow() {
+      const parts = new Intl.DateTimeFormat("en-US", {
+        timeZone: "America/Mexico_City", weekday: "short", hour: "2-digit", minute: "2-digit", hour12: false
+      }).formatToParts(new Date());
+      const get = t => parts.find(p => p.type === t).value;
+      const day = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].indexOf(get("weekday"));
+      const h = parseInt(get("hour"), 10) % 24;
+      return { day, min: h * 60 + parseInt(get("minute"), 10) };
+    }
+    const toMin = s => { const [h, m] = s.split(":").map(Number); return h * 60 + m; };
+
+    function openState(p) {
+      if (!p.hours) return { state: "u", label: "Horario sin confirmar" };
+      const { day, min } = gdlNow();
+      const inSlot = (d, m) => {
+        const slot = p.hours[d];
+        if (!Array.isArray(slot)) return false;
+        const o = toMin(slot[0]); let c = toMin(slot[1]);
+        if (c <= o) c += 1440;
+        return m >= o && m < c;
+      };
+      const prev = (day + 6) % 7;
+      if (inSlot(day, min) || inSlot(prev, min + 1440)) return { state: "y", label: "Abierto ahora" };
+      const today = p.hours[day];
+      if (today === "?") return { state: "u", label: "Hoy sin dato" };
+      if (today && min < toMin(today[0])) return { state: "n", label: `Cerrado · abre ${today[0]}` };
+      return { state: "n", label: "Cerrado ahora" };
+    }
+
+    function hoursTable(p) {
+      if (!p.hours) return `<p class="note">Horario no publicado en fuentes consultadas. Revisa Google Maps o sus redes.</p>`;
+      const { day } = gdlNow();
+      const order = [1, 2, 3, 4, 5, 6, 0];
+      return `<table class="hours">${order.map(d => {
+        const s = p.hours[d];
+        const txt = s === "?" ? "Sin dato" : s ? `${s[0]}–${s[1]}` : "Cerrado";
+        return `<tr data-day="${d}" class="${d === day ? "today" : ""}"><td>${DAYS[d]}</td><td>${txt}</td></tr>`;
+      }).join("")}</table>${p.hoursNote ? `<p class="note" style="margin:6px 0 0">${esc(p.hoursNote)}</p>` : ""}`;
+    }
+
+    function stars(r) {
+      const full = Math.floor(r), half = r - full >= 0.5;
+      return "★".repeat(full) + (half ? "½" : "") + "☆".repeat(5 - full - (half ? 1 : 0));
+    }
+
+    // ---------- Render ----------
+    const clusters = buildClusters();
+
+    function renderStrip() {
+      const tours = PLACES.filter(p => p.tour.has === "si").length;
+      const multi = clusters.filter(c => !c.solo).length;
+      document.getElementById("strip").innerHTML = `
+        <div><b>${PLACES.length}</b><small>Lugares</small></div>
+        <div><b>${multi}</b><small>Clusters</small></div>
+        <div><b>${new Set(PLACES.map(p => p.zone)).size}</b><small>Zonas</small></div>
+        <div><b>${tours}</b><small>Compran usados</small></div>`;
+    }
+
+    function renderClusters() {
+      document.getElementById("clusters").innerHTML = clusters.map(c => {
+        const sorted = [...c.members].sort((a, b) => b.rating - a.rating);
+        const muni = [...new Set(c.members.map(m => m.municipio))].join(" / ");
+        const walk = c.solo
+          ? `Destino propio: ${c.members[0].tour.has === "si" ? "lleva los libros que quieras vender." : "ve directo, no hay otros lugares cerca."}`
+          : `Caminable: ${c.span.toFixed(1)} km entre los extremos. Empieza en ${esc(sorted[0].name)}.`;
+        return `<article class="cluster" style="--c:${c.color}">
+          <h3>${esc(c.name)}</h3>
+          <p class="meta">${c.members.length} lugar${c.members.length > 1 ? "es" : ""} · ${esc(muni)} · prom. ${c.avg.toFixed(1)}</p>
+          <ul>${sorted.map(m => `<li><span>${esc(m.name)}<br><small class="note">${esc(m.colonia)}</small></span><span>${m.rating.toFixed(1)}</span></li>`).join("")}</ul>
+          <p class="walk">${walk}</p>
+        </article>`;
+      }).join("");
+    }
+
+    function renderLegend() {
+      document.getElementById("legend").innerHTML = clusters.map(c =>
+        `<span><i style="background:${c.color}"></i>${esc(c.name)}</span>`).join("");
+    }
+
+    let map;
+    const markers = {};
+    function renderMap() {
+      if (typeof L === "undefined") {
+        document.getElementById("map").innerHTML = `<p class="lede" style="padding:16px">No se pudo cargar el mapa (sin conexión). La lista y las zonas siguen disponibles abajo.</p>`;
+        return;
+      }
+      map = L.map("map", { scrollWheelZoom: false, tap: true }).setView([20.67, -103.39], 12);
+      L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
+        attribution: '&copy; OpenStreetMap &copy; CARTO', maxZoom: 19, subdomains: "abcd"
+      }).addTo(map);
+      clusters.filter(c => !c.solo).forEach(c => {
+        L.circle([c.lat, c.lng], { radius: c.radius, color: c.color, weight: 2, fillOpacity: 0.08, dashArray: "6 6" }).addTo(map);
+      });
+      PLACES.forEach(p => {
+        const icon = L.divIcon({
+          className: "", iconSize: [32, 32], iconAnchor: [16, 16],
+          html: `<div class="pin" style="background:${p.cluster.color}">${p.rating.toFixed(1)}</div>`
+        });
+        markers[p.id] = L.marker([p.lat, p.lng], { icon, title: p.name }).addTo(map).bindPopup(() => {
+          const o = openState(p);
+          return `<b>${esc(p.name)}</b><br>${esc(p.kind)} · ${esc(p.colonia)}<br>
+           <span style="color:#ffb800">${stars(p.rating)} ${p.rating.toFixed(1)}</span><br>
+           <span class="open open--${o.state}">${o.label}</span><br>
+           <a href="#card-${p.id}" data-card="${p.id}">Ver ficha ↓</a>`;
+        });
+      });
+      map.fitBounds(L.latLngBounds(PLACES.filter(p => p.municipio !== "Chapala").map(p => [p.lat, p.lng])).pad(0.1));
+    }
+
+    const state = { type: "all", zone: "all", sort: "rating", tourOnly: false };
+
+    function renderFilters() {
+      document.getElementById("typeChips").innerHTML = Object.entries(TYPE_LABELS).map(([k, v]) =>
+        `<button class="chip" data-type="${k}" aria-pressed="${state.type === k}">${v}</button>`).join("");
+      const zones = [...new Set(PLACES.map(p => p.zone))].sort();
+      document.getElementById("zoneSel").innerHTML = `<option value="all">Todas las zonas</option>` +
+        zones.map(z => `<option value="${esc(z)}">${esc(z)}</option>`).join("");
+      document.getElementById("tourOnly").setAttribute("aria-pressed", state.tourOnly);
+      document.getElementById("typeChips").addEventListener("click", e => {
+        const b = e.target.closest("[data-type]"); if (!b) return;
+        state.type = b.dataset.type;
+        document.querySelectorAll("#typeChips .chip").forEach(c => c.setAttribute("aria-pressed", c.dataset.type === state.type));
+        renderCards();
+      });
+      document.getElementById("zoneSel").addEventListener("change", e => { state.zone = e.target.value; renderCards(); });
+      document.getElementById("sortSel").addEventListener("change", e => { state.sort = e.target.value; renderCards(); });
+      document.getElementById("tourOnly").addEventListener("click", e => {
+        state.tourOnly = !state.tourOnly; e.currentTarget.setAttribute("aria-pressed", state.tourOnly); renderCards();
+      });
+    }
+
+    function card(p) {
+      const o = openState(p);
+      const maps = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.name + ", " + p.address)}`;
+      const statusTag = p.status === "cerrado?" ? `<span class="tag tag--w">Posiblemente cerrado</span>`
+        : p.status === "verificar" ? `<span class="tag tag--w">Verificar que opera</span>` : "";
+      const tourBox = p.tour.has === "si"
+        ? `<div class="tour"><b>Compran usados:</b> ${esc(p.tour.text)}</div>`
+        : p.tour.text ? `<p class="note">${esc(p.tour.text)}</p>` : "";
+      return `<article class="card" id="card-${p.id}">
+        <div class="card__top">
+          <div>
+            <p class="kicker">${esc(p.kind)}</p>
+            <h3>${esc(p.name)}</h3>
+            <p class="where"><span style="color:${p.cluster.color}">●</span> ${esc(p.colonia)} · ${esc(p.municipio)}<br>${esc(p.address)}</p>
+          </div>
+          <div class="score">
+            <b>${p.rating.toFixed(1)}</b>
+            <span class="stars" aria-label="${p.rating} de 5">${stars(p.rating)}</span>
+            <small>BIERBUCH${p.ref ? `<br>ref. ${p.ref.v} ${esc(p.ref.src)}` : ""}</small>
+          </div>
+        </div>
+        <div class="card__body">
+          <div class="tags">
+            ${p.types.map(t => `<span class="tag ${t === "usados" ? "tag--a" : ""}">${TYPE_LABELS[t]}</span>`).join("")}
+            ${p.tags.map(t => `<span class="tag">${esc(t)}</span>`).join("")}
+            ${statusTag}
+          </div>
+          <p style="margin:0">${esc(p.blurb)}</p>
+          ${tourBox}
+          <div>
+            <p class="open open--${o.state}" data-open="${p.id}" style="margin:0 0 6px">${o.label}</p>
+            ${hoursTable(p)}
+          </div>
+          <details class="src"><summary>Fuentes (${p.sources.length})</summary>
+            <ul>${p.sources.map(s => `<li><a href="${esc(s)}" target="_blank" rel="noopener">${esc(s.replace(/^https?:\/\/(www\.)?/, "").slice(0, 60))}</a></li>`).join("")}</ul>
+          </details>
+        </div>
+        <div class="actions">
+          <a class="btn btn--a" href="${maps}" target="_blank" rel="noopener">Cómo llegar</a>
+          ${p.phone ? `<a class="btn" href="tel:${p.phone.replace(/\s/g, "")}">Llamar</a>` : ""}
+          ${p.ig ? `<a class="btn" href="https://instagram.com/${esc(p.ig)}" target="_blank" rel="noopener">@${esc(p.ig)}</a>` : ""}
+          <a class="btn" href="#mapa" data-focus="${p.id}">En mapa</a>
+        </div>
+      </article>`;
+    }
+
+    function renderCards() {
+      let list = PLACES.filter(p =>
+        (state.type === "all" || p.types.includes(state.type)) &&
+        (state.zone === "all" || p.zone === state.zone) &&
+        (!state.tourOnly || p.tour.has === "si"));
+      const rank = { y: 0, n: 1, u: 2 };
+      list.sort({
+        rating: (a, b) => b.rating - a.rating,
+        name: (a, b) => a.name.localeCompare(b.name, "es"),
+        zone: (a, b) => a.zone.localeCompare(b.zone, "es") || b.rating - a.rating,
+        open: (a, b) => rank[openState(a).state] - rank[openState(b).state] || b.rating - a.rating
+      }[state.sort]);
+      document.getElementById("count").textContent = `${list.length} de ${PLACES.length}`;
+      document.getElementById("cards").innerHTML = list.length ? list.map(card).join("")
+        : `<p class="lede">Nada con esos filtros.</p>`;
+    }
+
+    function renderTours() {
+      const verdict = { si: ["Compran", "var(--ok)"], parcial: ["Intercambio", "var(--accent)"], no: ["No compran", "var(--warn)"], evento: ["Feria / mercado", "var(--accent)"] };
+      const rows = PLACES.filter(p => p.tour.has !== "no").map(p => ({ name: p.name, verdict: p.tour.has, text: p.tour.text, id: p.id }))
+        .concat(TOURS_EXTRA);
+      document.getElementById("toursList").innerHTML = rows.map(r => {
+        const [label, color] = verdict[r.verdict];
+        return `<div class="trow">
+          <div class="verdict" style="color:${color}">${label}</div>
+          <div><h4>${r.id ? `<a href="#card-${r.id}" data-card="${r.id}" style="border:0;color:#fff">${esc(r.name)}</a>` : esc(r.name)}</h4><p>${esc(r.text)}</p></div>
+        </div>`;
+      }).join("");
+    }
+
+    function renderRadar() {
+      document.getElementById("radarList").innerHTML = RADAR.map(r => `<li><b>${esc(r.name)}</b><span>${esc(r.note)}</span></li>`).join("");
+    }
+
+    function resetFilters() {
+      Object.assign(state, { type: "all", zone: "all", tourOnly: false });
+      document.querySelectorAll("#typeChips .chip").forEach(c => c.setAttribute("aria-pressed", c.dataset.type === "all"));
+      document.getElementById("zoneSel").value = "all";
+      document.getElementById("tourOnly").setAttribute("aria-pressed", "false");
+    }
+
+    function goToCard(id) {
+      if (!document.getElementById(`card-${id}`)) { resetFilters(); renderCards(); }
+      const el = document.getElementById(`card-${id}`);
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+
+    document.addEventListener("click", e => {
+      const link = e.target.closest("[data-card]");
+      if (link) { e.preventDefault(); goToCard(link.dataset.card); }
+    });
+
+    document.addEventListener("click", e => {
+      const a = e.target.closest("[data-focus]");
+      if (!a || !map) return;
+      const m = markers[a.dataset.focus];
+      if (m) setTimeout(() => { map.setView(m.getLatLng(), 15); m.openPopup(); }, 300);
+    });
+
+    renderStrip();
+    renderLegend();
+    renderClusters();
+    renderFilters();
+    renderCards();
+    renderTours();
+    renderRadar();
+    renderMap();
+    // Actualiza estado y día resaltado sin reconstruir las fichas (conserva foco y fuentes abiertas).
+    function refreshTimes() {
+      const { day } = gdlNow();
+      PLACES.forEach(p => {
+        const el = document.querySelector(`[data-open="${p.id}"]`);
+        if (!el) return;
+        const o = openState(p);
+        el.className = `open open--${o.state}`;
+        el.textContent = o.label;
+        el.parentElement.querySelectorAll("tr[data-day]").forEach(tr => tr.classList.toggle("today", Number(tr.dataset.day) === day));
+      });
+    }
+    setInterval(refreshTimes, 60000);
+  </script>
+</body>
+</html>
