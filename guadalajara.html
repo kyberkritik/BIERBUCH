@@ -127,7 +127,8 @@
     /* Cards */
     .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; }
     @media (max-width: 400px) { .grid { grid-template-columns: 1fr; } }
-    .card { border: 2px solid var(--line); background: var(--card-bg); display: flex; flex-direction: column; }
+    .card { border: 2px solid var(--line); background: var(--card-bg); display: flex; flex-direction: column; scroll-margin-top: 56px; }
+    .card:focus { outline: 3px solid var(--accent); outline-offset: 2px; }
     .card__top { padding: 16px; border-bottom: 1px solid #333; display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: start; }
     .kicker { font-size: 10px; letter-spacing: .2em; text-transform: uppercase; color: var(--accent); margin: 0 0 6px; }
     .card h3 { margin: 0; font-size: 22px; font-weight: 900; line-height: 1.05; letter-spacing: -0.01em; }
@@ -945,18 +946,22 @@
       </article>`;
     }
 
+    function comparator() {
+      const rank = { y: 0, n: 1, u: 2 };
+      return {
+        rating: (a, b) => b.rating - a.rating,
+        name: (a, b) => a.name.localeCompare(b.name, "es"),
+        zone: (a, b) => a.zone.localeCompare(b.zone, "es") || b.rating - a.rating,
+        open: (a, b) => rank[openState(a).state] - rank[openState(b).state] || b.rating - a.rating
+      }[state.sort];
+    }
+
     function renderCards() {
       let list = PLACES.filter(p =>
         (state.type === "all" || p.types.includes(state.type)) &&
         (state.zone === "all" || p.zone === state.zone) &&
         (!state.tourOnly || p.tour.has === "si"));
-      const rank = { y: 0, n: 1, u: 2 };
-      list.sort({
-        rating: (a, b) => b.rating - a.rating,
-        name: (a, b) => a.name.localeCompare(b.name, "es"),
-        zone: (a, b) => a.zone.localeCompare(b.zone, "es") || b.rating - a.rating,
-        open: (a, b) => rank[openState(a).state] - rank[openState(b).state] || b.rating - a.rating
-      }[state.sort]);
+      list.sort(comparator());
       document.getElementById("count").textContent = `${list.length} de ${PLACES.length}`;
       document.getElementById("cards").innerHTML = list.length ? list.map(card).join("")
         : `<p class="lede">Nada con esos filtros.</p>`;
@@ -989,7 +994,10 @@
     function goToCard(id) {
       if (!document.getElementById(`card-${id}`)) { resetFilters(); renderCards(); }
       const el = document.getElementById(`card-${id}`);
-      if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+      if (!el) return;
+      el.setAttribute("tabindex", "-1");
+      el.focus({ preventScroll: true });
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
     }
 
     document.addEventListener("click", e => {
@@ -1023,6 +1031,19 @@
         el.textContent = o.label;
         el.parentElement.querySelectorAll("tr[data-day]").forEach(tr => tr.classList.toggle("today", Number(tr.dataset.day) === day));
       });
+      if (state.sort === "open") reorderCards();
+    }
+
+    // Reordena las fichas existentes (sin reconstruirlas) y devuelve el foco si se perdió al moverlas.
+    function reorderCards() {
+      const box = document.getElementById("cards");
+      const nodes = [...box.querySelectorAll(":scope > .card")];
+      const byId = Object.fromEntries(PLACES.map(p => [p.id, p]));
+      const sorted = [...nodes].sort((a, b) => comparator()(byId[a.id.slice(5)], byId[b.id.slice(5)]));
+      if (sorted.every((n, i) => n === nodes[i])) return;
+      const active = document.activeElement;
+      sorted.forEach(n => box.appendChild(n));
+      if (active && box.contains(active) && document.activeElement !== active) active.focus({ preventScroll: true });
     }
     setInterval(refreshTimes, 60000);
   </script>
